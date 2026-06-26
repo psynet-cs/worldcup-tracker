@@ -698,21 +698,51 @@ function renderGames(games) {
 
 // ── API 호출 ────────────────────────────────────────────
 async function loadGames() {
-  try {
-    const res = await fetch('/api/games');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    renderGames(data.games || []);
-    if (data.thirds) renderStandingsFromServer(data.thirds);
-    else renderStandingsFromServer(FALLBACK_THIRDS);
-    const t = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
-    document.getElementById('updateTime').textContent = '마지막 업데이트: ' + t + ' (1시간 갱신)';
-    document.getElementById('footNote').textContent = '6/26 기준 · ' + t;
-  } catch(err) {
-    renderStandingsFromServer(FALLBACK_THIRDS);
-    document.getElementById('gameList').innerHTML =
-      '<div class="error-box">⚠️ 경기 데이터 로드 실패: ' + err.message + '</div>';
-  }
+  // Psynet API가 해외 IP(Netlify) 차단 + CORS 미지원으로 직접 호출 불가
+  // → 고정 데이터 즉시 렌더링 (로딩 없음)
+  renderStandingsFromServer(FALLBACK_THIRDS);
+
+  // 6/26 오늘 경기 결과 하드코딩 (확인된 실제 결과)
+  var todayGames = [
+    {gameId:'OT20262724868695', matchDate:'20260626', matchTime:'11:00',
+     homeTeam:'파라과이', awayTeam:'호주', homeScore:'0', awayScore:'0', state:'S_GF'},
+    {gameId:'OT20262724868694', matchDate:'20260626', matchTime:'11:00',
+     homeTeam:'튀르키예', awayTeam:'미국', homeScore:'3', awayScore:'2', state:'S_GF'},
+    {gameId:'OT20262724868706', matchDate:'20260626', matchTime:'08:00',
+     homeTeam:'튀니지', awayTeam:'네덜란드', homeScore:'1', awayScore:'3', state:'S_GF'},
+    {gameId:'OT20262724868707', matchDate:'20260626', matchTime:'08:00',
+     homeTeam:'일본', awayTeam:'스웨덴', homeScore:'1', awayScore:'1', state:'S_GF'},
+    {gameId:'OT20262724868700', matchDate:'20260626', matchTime:'05:00',
+     homeTeam:'에콰도르', awayTeam:'독일', homeScore:'2', awayScore:'1', state:'S_GF'},
+    {gameId:'OT20262724868701', matchDate:'20260626', matchTime:'05:00',
+     homeTeam:'퀴라소', awayTeam:'코트디부아르', homeScore:'0', awayScore:'2', state:'S_GF'},
+    // 6/27 예정
+    {gameId:'OT20262724868725', matchDate:'20260627', matchTime:'04:00',
+     homeTeam:'세네갈', awayTeam:'이라크', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868724', matchDate:'20260627', matchTime:'04:00',
+     homeTeam:'노르웨이', awayTeam:'프랑스', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868718', matchDate:'20260627', matchTime:'09:00',
+     homeTeam:'우루과이', awayTeam:'스페인', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868719', matchDate:'20260627', matchTime:'09:00',
+     homeTeam:'카보베르데', awayTeam:'사우디', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868713', matchDate:'20260627', matchTime:'12:00',
+     homeTeam:'이집트', awayTeam:'이란', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868712', matchDate:'20260627', matchTime:'12:00',
+     homeTeam:'뉴질랜드', awayTeam:'벨기에', homeScore:'', awayScore:'', state:'S_BE'},
+    // 6/28 예정
+    {gameId:'OT20262724868744', matchDate:'20260628', matchTime:'06:00',
+     homeTeam:'크로아티아', awayTeam:'가나', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868738', matchDate:'20260628', matchTime:'08:30',
+     homeTeam:'DR콩고', awayTeam:'우즈베키스탄', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868732', matchDate:'20260628', matchTime:'11:00',
+     homeTeam:'알제리', awayTeam:'오스트리아', homeScore:'', awayScore:'', state:'S_BE'},
+  ];
+
+  renderGames(todayGames);
+
+  var t = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+  document.getElementById('updateTime').textContent = '6/26 기준 확정 결과';
+  document.getElementById('footNote').textContent = '6/26 기준 · 갱신: ' + t;
 }
 
 // ── 초기화 ──────────────────────────────────────────────
