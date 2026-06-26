@@ -698,51 +698,165 @@ function renderGames(games) {
 
 // ── API 호출 ────────────────────────────────────────────
 async function loadGames() {
-  // Psynet API가 해외 IP(Netlify) 차단 + CORS 미지원으로 직접 호출 불가
-  // → 고정 데이터 즉시 렌더링 (로딩 없음)
-  renderStandingsFromServer(FALLBACK_THIRDS);
+  // 관리자 페이지에서 경기 결과 스크래핑 (매시 10분 갱신)
+  // 이 페이지는 한국 도메인이라 CORS 없이 접근 가능
+  var DATES = ['20260627', '20260628'];
+  var BASE  = 'https://lsnadmin.psynet.co.kr:10010/game/list?compe=soccer&league_id=OT272&state=&use_yn=Y&broadcast_history_yn=&search_date=';
 
-  // 6/26 오늘 경기 결과 하드코딩 (확인된 실제 결과)
-  var todayGames = [
-    {gameId:'OT20262724868695', matchDate:'20260626', matchTime:'11:00',
-     homeTeam:'파라과이', awayTeam:'호주', homeScore:'0', awayScore:'0', state:'S_GF'},
-    {gameId:'OT20262724868694', matchDate:'20260626', matchTime:'11:00',
-     homeTeam:'튀르키예', awayTeam:'미국', homeScore:'3', awayScore:'2', state:'S_GF'},
-    {gameId:'OT20262724868706', matchDate:'20260626', matchTime:'08:00',
-     homeTeam:'튀니지', awayTeam:'네덜란드', homeScore:'1', awayScore:'3', state:'S_GF'},
-    {gameId:'OT20262724868707', matchDate:'20260626', matchTime:'08:00',
-     homeTeam:'일본', awayTeam:'스웨덴', homeScore:'1', awayScore:'1', state:'S_GF'},
-    {gameId:'OT20262724868700', matchDate:'20260626', matchTime:'05:00',
-     homeTeam:'에콰도르', awayTeam:'독일', homeScore:'2', awayScore:'1', state:'S_GF'},
-    {gameId:'OT20262724868701', matchDate:'20260626', matchTime:'05:00',
-     homeTeam:'퀴라소', awayTeam:'코트디부아르', homeScore:'0', awayScore:'2', state:'S_GF'},
-    // 6/27 예정
-    {gameId:'OT20262724868725', matchDate:'20260627', matchTime:'04:00',
-     homeTeam:'세네갈', awayTeam:'이라크', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868724', matchDate:'20260627', matchTime:'04:00',
-     homeTeam:'노르웨이', awayTeam:'프랑스', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868718', matchDate:'20260627', matchTime:'09:00',
-     homeTeam:'우루과이', awayTeam:'스페인', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868719', matchDate:'20260627', matchTime:'09:00',
-     homeTeam:'카보베르데', awayTeam:'사우디', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868713', matchDate:'20260627', matchTime:'12:00',
-     homeTeam:'이집트', awayTeam:'이란', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868712', matchDate:'20260627', matchTime:'12:00',
-     homeTeam:'뉴질랜드', awayTeam:'벨기에', homeScore:'', awayScore:'', state:'S_BE'},
-    // 6/28 예정
-    {gameId:'OT20262724868744', matchDate:'20260628', matchTime:'06:00',
-     homeTeam:'크로아티아', awayTeam:'가나', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868738', matchDate:'20260628', matchTime:'08:30',
-     homeTeam:'DR콩고', awayTeam:'우즈베키스탄', homeScore:'', awayScore:'', state:'S_BE'},
-    {gameId:'OT20262724868732', matchDate:'20260628', matchTime:'11:00',
-     homeTeam:'알제리', awayTeam:'오스트리아', homeScore:'', awayScore:'', state:'S_BE'},
+  // 상태 코드 매핑 (관리자 한글 → 내부 코드)
+  function parseState(txt) {
+    if (!txt) return 'S_BE';
+    if (txt.includes('경기종료') || txt.includes('종료')) return 'S_GF';
+    if (txt.includes('경기중') || txt.includes('전반') || txt.includes('후반')) return 'S_LV';
+    if (txt.includes('하프타임')) return 'S_HT';
+    if (txt.includes('경기전')) return 'S_BE';
+    if (txt.includes('연기') || txt.includes('지연')) return 'S_PP';
+    return 'S_BE';
+  }
+
+  function parseGames(doc) {
+    var rows = doc.querySelectorAll('tr');
+    var games = [];
+    rows.forEach(function(row) {
+      var cells = row.querySelectorAll('td');
+      if (!cells || cells.length < 5) return;
+      var gameId = cells[0] && cells[0].textContent.trim();
+      if (!gameId || !gameId.startsWith('OT2026')) return;
+
+      // 날짜/시간
+      var dateCell = cells[3] && cells[3].textContent.trim();
+      var matchDate = dateCell ? dateCell.replace(/\D/g,'').slice(0,8) : '';
+      var matchTime = dateCell ? dateCell.slice(-5) : '';
+
+      // 상태
+      var stateCell = row.querySelector('select') || cells[4];
+      var stateText = stateCell ? stateCell.textContent : '';
+      var state = parseState(stateText);
+
+      // 팀명/점수
+      var homeCell = cells[6];
+      var awayCell = cells[7];
+      if (!homeCell || !awayCell) return;
+
+      var homeInput = homeCell.querySelector('input[type=text]');
+      var awayInput = awayCell.querySelector('input[type=text]');
+      var homeName  = homeCell.querySelector('span,div,td') || homeCell;
+      var awayName  = awayCell.querySelector('span,div,td') || awayCell;
+
+      games.push({
+        gameId:    gameId,
+        matchDate: matchDate,
+        matchTime: matchTime,
+        homeTeam:  homeName.textContent.trim().split('
+')[0].trim(),
+        awayTeam:  awayName.textContent.trim().split('
+')[0].trim(),
+        homeScore: homeInput ? homeInput.value : '',
+        awayScore: awayInput ? awayInput.value : '',
+        state:     state,
+      });
+    });
+    return games;
+  }
+
+  try {
+    // 두 날짜 동시 fetch (iframe 방식으로 같은 도메인 스크래핑)
+    var allGames = [];
+
+    for (var i = 0; i < DATES.length; i++) {
+      var url = BASE + DATES[i];
+      var resp = await fetch(url, {credentials: 'include'});
+      if (!resp.ok) continue;
+      var text = await resp.text();
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(text, 'text/html');
+      var games = parseGames(doc);
+      allGames = allGames.concat(games);
+    }
+
+    if (allGames.length > 0) {
+      renderGames(allGames);
+      // 결과 기반 3위팀 업데이트
+      var updated = updateThirdsFromGames(allGames);
+      renderStandingsFromServer(updated);
+      var t = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+      document.getElementById('updateTime').textContent = '마지막 업데이트: ' + t;
+      document.getElementById('footNote').textContent = '6/26 기준 · ' + t;
+    } else {
+      throw new Error('no games');
+    }
+
+  } catch(err) {
+    // 스크래핑 실패 시 하드코딩 데이터로 fallback
+    console.warn('Admin scraping failed, using fallback:', err.message);
+    useFallback();
+  }
+}
+
+function useFallback() {
+  var games = [
+    {gameId:'OT20262724868695', matchDate:'20260626', matchTime:'11:00', homeTeam:'파라과이', awayTeam:'호주', homeScore:'0', awayScore:'0', state:'S_GF'},
+    {gameId:'OT20262724868694', matchDate:'20260626', matchTime:'11:00', homeTeam:'튀르키예', awayTeam:'미국', homeScore:'3', awayScore:'2', state:'S_GF'},
+    {gameId:'OT20262724868706', matchDate:'20260626', matchTime:'08:00', homeTeam:'튀니지', awayTeam:'네덜란드', homeScore:'1', awayScore:'3', state:'S_GF'},
+    {gameId:'OT20262724868707', matchDate:'20260626', matchTime:'08:00', homeTeam:'일본', awayTeam:'스웨덴', homeScore:'1', awayScore:'1', state:'S_GF'},
+    {gameId:'OT20262724868725', matchDate:'20260627', matchTime:'04:00', homeTeam:'세네갈', awayTeam:'이라크', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868724', matchDate:'20260627', matchTime:'04:00', homeTeam:'노르웨이', awayTeam:'프랑스', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868718', matchDate:'20260627', matchTime:'09:00', homeTeam:'우루과이', awayTeam:'스페인', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868719', matchDate:'20260627', matchTime:'09:00', homeTeam:'카보베르데', awayTeam:'사우디', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868713', matchDate:'20260627', matchTime:'12:00', homeTeam:'이집트', awayTeam:'이란', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868712', matchDate:'20260627', matchTime:'12:00', homeTeam:'뉴질랜드', awayTeam:'벨기에', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868744', matchDate:'20260628', matchTime:'06:00', homeTeam:'크로아티아', awayTeam:'가나', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868738', matchDate:'20260628', matchTime:'08:30', homeTeam:'DR콩고', awayTeam:'우즈베키스탄', homeScore:'', awayScore:'', state:'S_BE'},
+    {gameId:'OT20262724868732', matchDate:'20260628', matchTime:'11:00', homeTeam:'알제리', awayTeam:'오스트리아', homeScore:'', awayScore:'', state:'S_BE'},
   ];
-
-  renderGames(todayGames);
-
-  var t = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+  renderGames(games);
+  renderStandingsFromServer(FALLBACK_THIRDS);
   document.getElementById('updateTime').textContent = '6/26 기준 확정 결과';
-  document.getElementById('footNote').textContent = '6/26 기준 · 갱신: ' + t;
+}
+
+function updateThirdsFromGames(games) {
+  // 종료된 경기 결과로 G/H/K/L 조 3위 업데이트
+  var BASE_ST = {
+    G: {'이집트':{pts:3,gf:3,ga:1},'벨기에':{pts:1,gf:0,ga:0},'이란':{pts:1,gf:0,ga:0},'뉴질랜드':{pts:0,gf:1,ga:4}},
+    H: {'스페인':{pts:3,gf:4,ga:0},'우루과이':{pts:1,gf:2,ga:2},'카보베르데':{pts:1,gf:2,ga:2},'사우디':{pts:0,gf:0,ga:4}},
+    K: {'콜롬비아':{pts:3,gf:3,ga:1},'포르투갈':{pts:1,gf:1,ga:1},'DR콩고':{pts:1,gf:1,ga:1},'우즈베키스탄':{pts:0,gf:1,ga:3}},
+    L: {'잊글랜드':{pts:3,gf:4,ga:2},'가나':{pts:3,gf:1,ga:0},'파나마':{pts:0,gf:0,ga:1},'크로아티아':{pts:0,gf:2,ga:4}},
+  };
+  var GAME_GRP = {
+    'OT20262724868713':{g:'G',h:'이집트',a:'이란'},
+    'OT20262724868712':{g:'G',h:'뉴질랜드',a:'벨기에'},
+    'OT20262724868718':{g:'H',h:'우루과이',a:'스페인'},
+    'OT20262724868719':{g:'H',h:'카보베르데',a:'사우디'},
+    'OT20262724868744':{g:'L',h:'크로아티아',a:'가나'},
+    'OT20262724868743':{g:'L',h:'파나마',a:'잊글랜드'},
+    'OT20262724868738':{g:'K',h:'DR콩고',a:'우즈베키스탄'},
+    'OT20262724868737':{g:'K',h:'콜롬비아',a:'포르투갈'},
+  };
+
+  games.forEach(function(g) {
+    if (g.state !== 'S_GF') return;
+    var info = GAME_GRP[g.gameId];
+    if (!info) return;
+    var grp = BASE_ST[info.g];
+    if (!grp || !grp[info.h] || !grp[info.a]) return;
+    var hs = parseInt(g.homeScore)||0, as = parseInt(g.awayScore)||0;
+    grp[info.h].gf+=hs; grp[info.h].ga+=as;
+    grp[info.a].gf+=as; grp[info.a].ga+=hs;
+    if(hs>as) grp[info.h].pts+=3;
+    else if(hs===as){grp[info.h].pts+=1; grp[info.a].pts+=1;}
+    else grp[info.a].pts+=3;
+  });
+
+  var thirds = JSON.parse(JSON.stringify(FALLBACK_THIRDS));
+  ['G','H','K','L'].forEach(function(grpId) {
+    var arr = Object.entries(BASE_ST[grpId]).map(function(e){
+      return {name:e[0], pts:e[1].pts, gd:e[1].gf-e[1].ga, gf:e[1].gf};
+    }).sort(function(a,b){return b.pts-a.pts||b.gd-a.gd||b.gf-a.gf;});
+    var t = arr[2];
+    var idx = thirds.findIndex(function(x){return x.group===grpId;});
+    if(idx>=0) thirds[idx] = {group:grpId, name:t.name, pts:t.pts, gd:t.gd, gf:t.gf, done:false};
+  });
+  return thirds.sort(function(a,b){return b.pts-a.pts||b.gd-a.gd||b.gf-a.gf;});
 }
 
 // ── 초기화 ──────────────────────────────────────────────
@@ -760,7 +874,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function startPolling() {
     stopPolling();
-    pollTimer = setInterval(loadGames, 60 * 1000); // 60초
+    // 매시 10분에 갱신 (1:10, 2:10, ...)
+    function msUntilNextTen() {
+      var now = new Date();
+      var next = new Date(now);
+      next.setMinutes(10, 0, 0);
+      if (now.getMinutes() >= 10) next.setHours(next.getHours() + 1);
+      return next - now;
+    }
+    function scheduleNext() {
+      var ms = msUntilNextTen();
+      pollTimer = setTimeout(function() {
+        loadGames();
+        scheduleNext();
+      }, ms);
+    }
+    scheduleNext();
   }
   function stopPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
