@@ -720,55 +720,47 @@ function renderGames(games) {
 
 // ── API 호출 ────────────────────────────────────────────
 async function loadGames() {
-  // 로컬(file://) 환경 감지 → Psynet API 직접 호출
-  const isLocal = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  const AUTH_KEY = 'YlXPJojo8hVs5iFeWfZBRE7SJ8cXOUHF';
-  const BASE = 'https://data.psynet.co.kr/data3V1/livescore';
+  var AUTH = 'YlXPJojo8hVs5iFeWfZBRE7SJ8cXOUHF';
+  var BASE = 'https://data.psynet.co.kr/data3V1/livescore';
+  var WC   = 'OT272';
+
+  function kDate(plus) {
+    var d = new Date(Date.now() + (9+(plus||0)*24)*3600000);
+    var p = function(n){return n<10?'0'+n:''+n;};
+    return ''+d.getUTCFullYear()+p(d.getUTCMonth()+1)+p(d.getUTCDate());
+  }
 
   try {
-    let data;
+    var d0 = kDate(0), d1 = kDate(1);
+    var [r0, r1] = await Promise.all([
+      fetch(BASE+'/gameList?auth_key='+AUTH+'&search_date='+d0+'&compe=soccer'),
+      fetch(BASE+'/gameList?auth_key='+AUTH+'&search_date='+d1+'&compe=soccer'),
+    ]);
+    var [j0, j1] = await Promise.all([r0.json(), r1.json()]);
 
-    if (isLocal) {
-      // 로컬: Psynet API 직접 호출 (CORS 가능 여부에 따라 동작)
-      const today = new Date(Date.now() + 9*60*60*1000).toISOString().slice(0,10).replace(/-/g,'');
-      const tomorrow = new Date(Date.now() + (9+24)*60*60*1000).toISOString().slice(0,10).replace(/-/g,'');
-      const [r1, r2] = await Promise.all([
-        fetch(`${BASE}/gameList?auth_key=${AUTH_KEY}&search_date=${today}&compe=soccer`),
-        fetch(`${BASE}/gameList?auth_key=${AUTH_KEY}&search_date=${tomorrow}&compe=soccer`),
-      ]);
-      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-      const wc = g => g.LEAGUE_ID === 'OT272';
-      const fmt = g => ({
-        gameId: g.GAME_ID, matchDate: g.MATCH_DATE, matchTime: g.MATCH_TIME,
-        homeTeam: g.HOME_TEAM_SHORT_NAME||g.HOME_TEAM_NAME,
-        awayTeam: g.AWAY_TEAM_SHORT_NAME||g.AWAY_TEAM_NAME,
-        homeTeamId: g.HOME_TEAM_ID, awayTeamId: g.AWAY_TEAM_ID,
-        homeScore: g.HOME_SCORE, awayScore: g.AWAY_SCORE, state: g.STATE_TXT_CODE,
-      });
-      const games = [...(d1?.Data?.list||[]).filter(wc), ...(d2?.Data?.list||[]).filter(wc)].map(fmt);
-      data = { games, thirds: null, updatedAt: new Date().toISOString() };
-    } else {
-      // 배포 환경: Netlify Function 프록시
-      const res = await fetch('/api/games');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      data = await res.json();
-    }
+    var fmt = function(g) { return {
+      gameId: g.GAME_ID, matchDate: g.MATCH_DATE, matchTime: g.MATCH_TIME,
+      homeTeam: g.HOME_TEAM_SHORT_NAME||g.HOME_TEAM_NAME,
+      awayTeam: g.AWAY_TEAM_SHORT_NAME||g.AWAY_TEAM_NAME,
+      homeTeamId: g.HOME_TEAM_ID, awayTeamId: g.AWAY_TEAM_ID,
+      homeScore: g.HOME_SCORE, awayScore: g.AWAY_SCORE, state: g.STATE_TXT_CODE
+    }; };
 
-    renderGames(data.games || []);
-    if (data.thirds) renderStandingsFromServer(data.thirds);
-    // 로컬에서 thirds 없을 때 → 고정 데이터로 fallback
-    if (!data.thirds) renderStandingsFromServer(FALLBACK_THIRDS);
+    var all = ((j0.Data&&j0.Data.list)||[]).concat((j1.Data&&j1.Data.list)||[]);
+    var games = all.filter(function(g){return g.LEAGUE_ID===WC;}).map(fmt);
 
-    const t = new Date(data.updatedAt).toLocaleString('ko-KR', { timeZone:'Asia/Seoul' });
-    document.getElementById('updateTime').textContent = `마지막 업데이트: ${t}${isLocal?' (로컬)':' (20분 갱신)'}`;
-    document.getElementById('footNote').textContent = `6/26 기준 · ${t}`;
+    renderGames(games);
+    renderStandingsFromServer(FALLBACK_THIRDS);
+
+    var t = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
+    document.getElementById('updateTime').textContent = '마지막 업데이트: ' + t + ' (1시간 갱신)';
+    document.getElementById('footNote').textContent = '6/26 기준 · ' + t;
 
   } catch(err) {
     console.error(err);
-    // API 실패해도 고정 데이터는 보여줌
     renderStandingsFromServer(FALLBACK_THIRDS);
     document.getElementById('gameList').innerHTML =
-      `<div class="error-box">⚠️ 실시간 데이터 로드 실패 (${err.message})<br>배포 환경(Netlify)에서는 정상 동작합니다.</div>`;
+      '<div class="error-box">⚠️ 경기 데이터 로드 실패: ' + err.message + '</div>';
   }
 }
 
