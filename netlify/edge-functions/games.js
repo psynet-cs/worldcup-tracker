@@ -11,19 +11,20 @@ const SUPABASE_URL  = 'https://ppcexnpqvqprupyonhtz.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwY2V4bnBxdnFwcnVweW9uaHR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjY2ODksImV4cCI6MjA4OTMwMjY4OX0.-gzk-AiAZML-SlYMUwZHQRwylGnXKMuReJIbEfB3pkY';
 const LEAGUE_ID = 'OT272';
 
+// 실제 3위 순위 (수동 스냅샷, 구글/공식 기준). 미정 조(done:false)는 최종전 후 갱신 필요.
 const FIXED_THIRDS_DATA = [
-  { group:'A', name:'대한민국',          pts:3, gd:-1, gf:2,  done:true },
-  { group:'B', name:'보스니아헤르체고비나', pts:3, gd:-1, gf:4,  done:true },
-  { group:'C', name:'스코틀랜드',         pts:3, gd:-3, gf:1,  done:true },
-  { group:'D', name:'미국',              pts:3, gd:1,  gf:4,  done:true },
-  { group:'E', name:'에콰도르',           pts:4, gd:0,  gf:2,  done:true },
-  { group:'F', name:'스웨덴',            pts:4, gd:0,  gf:7,  done:true },
-  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3,  done:true },
-  { group:'J', name:'알제리',            pts:3, gd:-2, gf:2,  done:true },
-  { group:'G', name:'이란',              pts:1, gd:0,  gf:0,  done:false },
-  { group:'H', name:'카보베르데',         pts:1, gd:0,  gf:2,  done:false },
-  { group:'K', name:'DR콩고',           pts:1, gd:0,  gf:1,  done:false },
-  { group:'L', name:'파나마',            pts:0, gd:-1, gf:0,  done:false },
+  { group:'F', name:'스웨덴',            pts:4, gd: 0, gf:7, done:true  },
+  { group:'E', name:'에콰도르',           pts:4, gd: 0, gf:2, done:true  },
+  { group:'B', name:'보스니아헤르체고비나', pts:4, gd:-1, gf:5, done:true  },
+  { group:'D', name:'파라과이',           pts:4, gd:-2, gf:2, done:true  },
+  { group:'L', name:'크로아티아',          pts:3, gd:-1, gf:3, done:false },
+  { group:'A', name:'대한민국',           pts:3, gd:-1, gf:2, done:true  },
+  { group:'J', name:'알제리',            pts:3, gd:-2, gf:2, done:false },
+  { group:'C', name:'스코틀랜드',         pts:3, gd:-3, gf:1, done:true  },
+  { group:'H', name:'카보베르데',         pts:2, gd: 0, gf:2, done:false },
+  { group:'G', name:'벨기에',            pts:2, gd: 0, gf:1, done:false },
+  { group:'K', name:'콩고민주공화국',      pts:1, gd:-1, gf:1, done:false },
+  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3, done:false },
 ];
 
 function updateThirds(thirds, todayGames) {
@@ -83,7 +84,7 @@ export default async () => {
     const rows = await res.json();
     const todayGames = ((rows && rows[0] && rows[0].games) || []).filter(g => g.LEAGUE_ID === LEAGUE_ID);
 
-    const thirds = updateThirds([...FIXED_THIRDS_DATA], todayGames);
+    const thirds = [...FIXED_THIRDS_DATA];
     const thirds_sorted = thirds.sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
     const games = todayGames.map(g => ({
       gameId: g.GAME_ID, matchDate: g.MATCH_DATE, matchTime: g.MATCH_TIME,
