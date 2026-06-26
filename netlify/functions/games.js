@@ -13,7 +13,7 @@ const LEAGUE_ID = 'OT272';
 
 // ── In-memory 캐시 (콜드스타트 방지) ─────────────────────
 let memCache = { data: null, date: null, expiresAt: 0 };
-const MEM_TTL = 18 * 60 * 1000; // 18분
+const MEM_TTL = 55 * 60 * 1000; // 55분 (매시 20분 갱신)
 
 function httpGet(url) {
   return new Promise((resolve, reject) => {
@@ -127,8 +127,8 @@ exports.handler = async (event) => {
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json; charset=utf-8',
     // ★ 20분 캐시 (매시 XX:20에 갱신되도록 설계)
-    'Cache-Control': 'public, s-maxage=1200, stale-while-revalidate=60',
-    'Netlify-CDN-Cache-Control': 'public, s-maxage=1200, stale-while-revalidate=60',
+    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=60',
+    'Netlify-CDN-Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=60',
   };
 
   if (!AUTH_KEY) return {
