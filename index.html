@@ -63,6 +63,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 .rank-num.dred{color:#b91c1c}
 .flag-wrap{width:36px;height:24px;border-radius:3px;overflow:hidden;border:1.5px solid #333;display:flex;align-items:center;justify-content:center;align-self:center}
 .flag-wrap svg{display:block;width:100%;height:100%}
+.flag-wrap img{display:block;width:100%;height:100%;object-fit:cover}
 .team-info{min-width:0}
 .team-info .nm{font-size:13px;font-weight:700;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .team-info .nm.korea{color:#C8102E}
@@ -147,25 +148,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 <!-- 헤더 -->
 <div class="hdr">
   <div class="hdr-top">
-    <svg viewBox="0 0 900 600" width="54" height="36" style="border-radius:5px;border:2px solid #333;flex-shrink:0;display:block">
-      <rect width="900" height="600" fill="#fff"/>
-      <circle cx="450" cy="300" r="165" fill="#CD2E3A"/>
-      <path d="M450 135 a165 165 0 0 0 0 330 a82.5 82.5 0 0 0 0-165 a82.5 82.5 0 0 1 0-165Z" fill="#0047A0"/>
-      <circle cx="450" cy="217.5" r="82.5" fill="#CD2E3A"/>
-      <circle cx="450" cy="382.5" r="82.5" fill="#0047A0"/>
-      <g stroke="#000" stroke-width="26" stroke-linecap="round">
-        <line x1="135" y1="154" x2="282" y2="77"/><line x1="159" y1="196" x2="306" y2="119"/><line x1="183" y1="238" x2="330" y2="161"/>
-        <line x1="570" y1="439" x2="641" y2="401"/><line x1="668" y1="401" x2="740" y2="363"/>
-        <line x1="594" y1="481" x2="665" y2="443"/><line x1="692" y1="443" x2="763" y2="405"/>
-        <line x1="618" y1="523" x2="689" y2="485"/><line x1="716" y1="485" x2="787" y2="447"/>
-        <line x1="618" y1="77" x2="689" y2="115"/><line x1="716" y1="115" x2="787" y2="153"/>
-        <line x1="570" y1="119" x2="740" y2="211"/>
-        <line x1="594" y1="161" x2="665" y2="199"/><line x1="692" y1="199" x2="763" y2="237"/>
-        <line x1="113" y1="363" x2="283" y2="477"/>
-        <line x1="137" y1="405" x2="208" y2="443"/><line x1="235" y1="443" x2="306" y2="481"/>
-        <line x1="161" y1="447" x2="331" y2="561"/>
-      </g>
-    </svg>
+    <img src="data:image/png;base64,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" alt="대한민국 국기" width="54" height="36" style="border-radius:5px;border:2px solid #333;flex-shrink:0;display:block;object-fit:cover">
+
     <div class="hdr-text">
       <h1>대한민국 32강 진출<br>경우의 수</h1>
       <p>2026 북중미 월드컵 · A조 최종 3위</p>
@@ -406,8 +390,15 @@ const FLAGS = {
   '카보베르데':  `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#003893"/><rect y="266" width="900" height="66" fill="#fff"/><rect y="280" width="900" height="40" fill="#CF2027"/></svg>`,
   'DR콩고':     `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#007FFF"/><line x1="0" y1="600" x2="900" y2="0" stroke="#F7D618" stroke-width="120"/><circle cx="120" cy="120" r="100" fill="#CE1021"/></svg>`,
   '파나마':      `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#fff"/><rect width="450" height="300" fill="#fff"/><rect x="450" width="450" height="300" fill="#DB121A"/><rect y="300" width="450" height="300" fill="#1B4FC0"/><rect x="450" y="300" width="450" height="300" fill="#fff"/></svg>`,
+  '파라과이':    `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#0038A8"/><rect width="900" height="400" fill="#fff"/><rect width="900" height="200" fill="#D52B1E"/></svg>`,
+  '크로아티아':  `<svg viewBox="0 0 900 600"><rect width="900" height="200" fill="#FF0000"/><rect y="200" width="900" height="200" fill="#fff"/><rect y="400" width="900" height="200" fill="#171796"/><rect x="375" y="190" width="150" height="150" fill="#fff" stroke="#171796" stroke-width="8"/></svg>`,
+  '벨기에':      `<svg viewBox="0 0 900 600"><rect width="300" height="600" fill="#000"/><rect x="300" width="300" height="600" fill="#FAE042"/><rect x="600" width="300" height="600" fill="#ED2939"/></svg>`,
+  '콩고민주공화국': `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#007FFF"/><line x1="0" y1="600" x2="900" y2="0" stroke="#F7D618" stroke-width="120"/><circle cx="130" cy="120" r="62" fill="#CE1021"/></svg>`,
 };
+// 표준 태극기 (정확한 4괘·태극) — 첨부 이미지 기준
+const KR_FLAG = '<img src="data:image/png;base64,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" alt="대한민국" style="width:100%;height:100%;object-fit:cover;display:block">';
 function getFlag(name) {
+  if (name === '대한민국') return KR_FLAG;
   return FLAGS[name] || `<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#e1e0d9"/></svg>`;
 }
 
@@ -734,18 +725,18 @@ function renderGames(games) {
 // ── API 호출 ────────────────────────────────────────────
 // ── fallback 고정 데이터 (API 실패 시 표시) — 전역 스코프 ──
 const FALLBACK_THIRDS = [
-  { group:'F', name:'스웨덴',            pts:4, gd: 0, gf:7,  done:true  },
-  { group:'E', name:'에콰도르',           pts:4, gd: 0, gf:2,  done:true  },
-  { group:'D', name:'미국',              pts:3, gd:+1, gf:4,  done:true  },
-  { group:'B', name:'보스니아헤르체고비나', pts:3, gd:-1, gf:4,  done:true  },
-  { group:'A', name:'대한민국',           pts:3, gd:-1, gf:2,  done:true  },
-  { group:'J', name:'알제리',            pts:3, gd:-2, gf:2,  done:true  },
-  { group:'C', name:'스코틀랜드',         pts:3, gd:-3, gf:1,  done:true  },
-  { group:'G', name:'이란',              pts:1, gd: 0, gf:0,  done:false },
-  { group:'H', name:'카보베르데',         pts:1, gd: 0, gf:2,  done:false },
-  { group:'K', name:'DR콩고',           pts:1, gd: 0, gf:1,  done:false },
-  { group:'L', name:'파나마',            pts:0, gd:-1, gf:0,  done:false },
-  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3,  done:true  },
+  { group:'F', name:'스웨덴',            pts:4, gd: 0, gf:7, done:true  },
+  { group:'E', name:'에콰도르',           pts:4, gd: 0, gf:2, done:true  },
+  { group:'B', name:'보스니아헤르체고비나', pts:4, gd:-1, gf:5, done:true  },
+  { group:'D', name:'파라과이',           pts:4, gd:-2, gf:2, done:true  },
+  { group:'L', name:'크로아티아',          pts:3, gd:-1, gf:3, done:false },
+  { group:'A', name:'대한민국',           pts:3, gd:-1, gf:2, done:true  },
+  { group:'J', name:'알제리',            pts:3, gd:-2, gf:2, done:false },
+  { group:'C', name:'스코틀랜드',         pts:3, gd:-3, gf:1, done:true  },
+  { group:'H', name:'카보베르데',         pts:2, gd: 0, gf:2, done:false },
+  { group:'G', name:'벨기에',            pts:2, gd: 0, gf:1, done:false },
+  { group:'K', name:'콩고민주공화국',      pts:1, gd:-1, gf:1, done:false },
+  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3, done:false },
 ];
 
 async function loadGames() {
