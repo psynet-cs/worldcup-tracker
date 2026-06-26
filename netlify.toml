@@ -4,13 +4,8 @@
   publish   = "."
   functions = "netlify/functions"
 
-# Node.js 버전 고정
 [functions]
-  node_bundler = "esbuild"
-
-[functions."games"]
-  # Function 메모리 (기본 1024MB면 충분)
-  memory = 1024
+  included_files = []
 
 # ── 라우팅 ───────────────────────────────────────────────
 [[redirects]]
@@ -33,8 +28,8 @@
 [[headers]]
   for = "/.netlify/functions/games"
   [headers.values]
-    Cache-Control             = "public, s-maxage=30, stale-while-revalidate=10"
-    Netlify-CDN-Cache-Control = "public, s-maxage=30, stale-while-revalidate=10"
+    Cache-Control             = "public, s-maxage=3600, stale-while-revalidate=60"
+    Netlify-CDN-Cache-Control = "public, s-maxage=3600, stale-while-revalidate=60"
 
 # ── 보안 헤더 ────────────────────────────────────────────
 [[headers]]
