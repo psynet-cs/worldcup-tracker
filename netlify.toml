@@ -1,0 +1,46 @@
+# ── Netlify 설정 ──────────────────────────────────────────
+
+[build]
+  publish   = "."
+  functions = "netlify/functions"
+
+# Node.js 버전 고정
+[functions]
+  node_bundler = "esbuild"
+
+[functions."games"]
+  # Function 메모리 (기본 1024MB면 충분)
+  memory = 1024
+
+# ── 라우팅 ───────────────────────────────────────────────
+[[redirects]]
+  from   = "/api/*"
+  to     = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ── 정적 파일 캐시 (HTML은 짧게, 변경 감지 필요) ──────────
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# ── API 응답 캐시 (CDN 레벨) ────────────────────────────
+[[headers]]
+  for = "/.netlify/functions/games"
+  [headers.values]
+    Cache-Control             = "public, s-maxage=30, stale-while-revalidate=10"
+    Netlify-CDN-Cache-Control = "public, s-maxage=30, stale-while-revalidate=10"
+
+# ── 보안 헤더 ────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options           = "SAMEORIGIN"
+    X-Content-Type-Options    = "nosniff"
+    Referrer-Policy           = "strict-origin-when-cross-origin"
+    Permissions-Policy        = "camera=(), microphone=(), geolocation=()"
