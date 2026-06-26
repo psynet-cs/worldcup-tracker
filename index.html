@@ -181,12 +181,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 
 <!-- 확률 -->
 <div class="prob">
-  <div class="prob-lbl">32강 진출 확률 (전문가 시뮬레이션)</div>
+  <div class="prob-lbl">32강 진출 확률 (옵타 추정 · 6/26 기준)</div>
   <div class="prob-row">
-    <div class="prob-num">87.8</div>
+    <div class="prob-num">53.2</div>
     <div class="prob-pct">%</div>
   </div>
-  <div class="prob-sub">12개 조 3위 중 <b>상위 8팀</b>만 32강 진출<br>우리 경기 끝 — 이제 <b>다른 경기 응원</b>만 남았어요!</div>
+  <div class="prob-sub">12개 조 3위 중 <b>상위 8팀</b>만 32강 진출<br>축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치</div>
   <div class="gauge"><div class="gauge-fill" style="width:0" id="gaugeFill"></div></div>
 </div>
 
@@ -478,18 +478,21 @@ function renderStandingsFromServer(thirds) {
   rows.innerHTML = html;
   cutBar.innerHTML = `커트라인 <b>8위 안</b> · 우리 위 <b>${aheadCount}팀</b> 확정 · 아래 <b>${belowCount}팀</b> 확보 · 미정 <b>${pendingCount}팀</b>`;
 
-  // 진출확률 실시간 반영 (게이지 + 숫자)
-  const prob = advanceProbability(aheadCount, pendingCount);
+  // ── 진출확률: 옵타(Opta) 발표 수치 수동 표기 ──────────────
+  // 자동 계산이 아님. 옵타 슈퍼컴퓨터 추정치를 사용.
+  // 수치가 갱신되면 아래 OPTA_PROB / OPTA_ASOF 두 값만 바꾸면 됨.
+  const OPTA_PROB = 53.2;     // % (옵타 발표값)
+  const OPTA_ASOF = '6/26';   // 기준일
   const probNum = document.querySelector('.prob-num');
   const gauge   = document.getElementById('gaugeFill');
-  if (probNum) probNum.textContent = prob.toFixed(1);
-  if (gauge)   gauge.style.width = prob + '%';
+  if (probNum) probNum.textContent = OPTA_PROB.toFixed(1);
+  if (gauge)   gauge.style.width = OPTA_PROB + '%';
+  const probLbl = document.querySelector('.prob-lbl');
+  if (probLbl) probLbl.textContent = `32강 진출 확률 (옵타 추정 · ${OPTA_ASOF} 기준)`;
   const probSub = document.querySelector('.prob-sub');
   if (probSub) probSub.innerHTML =
     `12개 조 3위 중 <b>상위 8팀</b>만 32강 진출 · 우리 위 <b>${aheadCount}팀</b> 확정<br>` +
-    (pendingCount > 0
-      ? `미정 <b>${pendingCount}개 조</b>가 모두 우리를 넘어야 탈락 — 그래서 진출 가능성이 높아요!`
-      : `남은 변수 없음 — 결과 확정!`);
+    `축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치`;
 }
 
 // ── 3위팀 고정 데이터 (확정된 조) ────────────────────────
