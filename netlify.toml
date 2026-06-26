@@ -2,16 +2,14 @@
 
 [build]
   publish   = "."
+  edge_functions = "netlify/edge-functions"
   functions = "netlify/functions"
 
 [functions]
   included_files = []
 
 # ── 라우팅 ───────────────────────────────────────────────
-[[redirects]]
-  from   = "/api/*"
-  to     = "/.netlify/functions/:splat"
-  status = 200
+# /api/games는 edge function이 처리 (config에 path 지정됨)
 
 [[redirects]]
   from   = "/*"
