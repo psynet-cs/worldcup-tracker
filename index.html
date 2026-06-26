@@ -430,12 +430,18 @@ function renderStandingsFromServer(thirds) {
   const rows = document.getElementById('standingsRows');
   const cutBar = document.getElementById('cutBar');
   if (!rows) return;
-  const KOREA = { pts:3, gd:-1 };
+  const krow = thirds.find(t => t.name === '대한민국');
+  const KOREA = { pts: krow?krow.pts:3, gd: krow?krow.gd:-1, gf: krow?krow.gf:2 };
+  // pts → gd → gf(득점) 타이브레이크로 한국보다 위인지 판정
+  const aboveKorea = (t) =>
+    t.pts > KOREA.pts ||
+    (t.pts === KOREA.pts && t.gd > KOREA.gd) ||
+    (t.pts === KOREA.pts && t.gd === KOREA.gd && (t.gf||0) > (KOREA.gf||0));
   let html = '';
   let aheadCount = 0, belowCount = 0, pendingCount = 0;
   thirds.forEach((t, i) => {
     const isKorea  = (t.name === '대한민국');
-    const isAhead  = !isKorea && (t.pts > KOREA.pts || (t.pts===KOREA.pts && t.gd>KOREA.gd));
+    const isAhead  = !isKorea && aboveKorea(t);
     const isBelow  = !isKorea && t.done && !isAhead;
     if (isAhead && t.done) aheadCount++;
     if (isBelow) belowCount++;
