@@ -768,8 +768,13 @@ async function loadGames() {
       const games = [...(d1?.Data?.list||[]).filter(wc), ...(d2?.Data?.list||[]).filter(wc)].map(fmt);
       data = { games, thirds: null, updatedAt: new Date().toISOString() };
     } else {
-      // 배포 환경: Netlify Function 프록시
-      const res = await fetch('/api/games');
+      // 배포 환경: Netlify Function 프록시 (8초 타임아웃 → 지연 시 빠르게 fallback 표시)
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 8000);
+      let res;
+      try { res = await fetch('/api/games', { signal: ctrl.signal }); }
+      catch(e) { throw new Error(ctrl.signal.aborted ? '응답 지연(8초 초과)' : e.message); }
+      finally { clearTimeout(to); }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       data = await res.json();
     }
