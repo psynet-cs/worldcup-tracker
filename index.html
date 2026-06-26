@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>대한민국 32강 경우의 수 — 2026 월드컵</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#f0f0ee;padding:14px 14px 36px}
+
+/* ── 헤더 ── */
+.hdr{border-radius:14px;overflow:hidden;border:2px solid #111;margin-bottom:12px}
+.hdr-top{background:#C8102E;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.hdr-text h1{color:#fff;font-size:18px;font-weight:700;line-height:1.3}
+.hdr-text p{color:rgba(255,255,255,.72);font-size:11px;margin-top:3px}
+.hdr-stats{background:#00205B;display:grid;grid-template-columns:repeat(4,1fr);padding:10px 0}
+.hs{text-align:center}
+.hs .v{color:#FFD700;font-size:16px;font-weight:700}
+.hs .l{color:rgba(255,255,255,.55);font-size:10px;margin-top:2px}
+
+/* ── 확률 카드 ── */
+.prob{background:#00205B;border-radius:14px;padding:16px;border:2px solid #111;margin-bottom:12px}
+.prob-lbl{color:rgba(255,255,255,.6);font-size:11px;margin-bottom:4px}
+.prob-row{display:flex;align-items:flex-end;gap:6px;margin-bottom:10px}
+.prob-num{color:#FFD700;font-size:64px;font-weight:700;line-height:1}
+.prob-pct{color:#FFD700;font-size:24px;padding-bottom:6px}
+.prob-sub{color:rgba(255,255,255,.82);font-size:13px;line-height:1.6}
+.prob-sub b{color:#FFD700}
+.gauge{height:10px;background:rgba(255,255,255,.15);border-radius:5px;margin-top:10px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:5px;background:#FFD700;transition:width 1.2s ease}
+
+/* ── 섹션 ── */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+.sec-hd h2{font-size:14px;font-weight:700;color:#1a1a18;display:flex;align-items:center;gap:5px}
+.chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#dcfce7;color:#15803d;border:1px solid #86efac}
+
+/* ── 실시간 배지 ── */
+.live-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;margin-left:6px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#C8102E;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── 팀 리스트 (grid) ── */
+.team-list{border-radius:14px;overflow:hidden;border:2px solid #111;margin-bottom:12px}
+.team-row{
+  display:grid;
+  grid-template-columns:20px 36px 1fr 40px 40px 74px;
+  align-items:center;
+  column-gap:8px;
+  padding:11px 12px;
+  background:#fff;
+  border-bottom:1px solid #e5e4e0;
+}
+.team-row:last-child{border-bottom:none}
+.team-row.me{background:#fff5f5;position:relative}
+.team-row.me::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#C8102E}
+.team-row.good{background:#f0fdf4}
+.team-row.bad{background:#fff8f8}
+.team-row.dim{opacity:.45}
+.rank-num{font-size:12px;font-weight:700;color:#aaa;text-align:center}
+.rank-num.red{color:#C8102E}
+.rank-num.green{color:#15803d}
+.rank-num.dred{color:#b91c1c}
+.flag-wrap{width:36px;height:24px;border-radius:3px;overflow:hidden;border:1.5px solid #333;display:flex;align-items:center;justify-content:center;align-self:center}
+.flag-wrap svg{display:block;width:100%;height:100%}
+.team-info{min-width:0}
+.team-info .nm{font-size:13px;font-weight:700;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-info .nm.korea{color:#C8102E}
+.team-info .nm.green{color:#15803d}
+.team-info .sub{font-size:10px;color:#aaa;margin-top:1px}
+.pts-col{text-align:center}
+.pts-col .pts{font-size:15px;font-weight:700;color:#1a1a18;display:block}
+.pts-col .lbl{font-size:9px;color:#aaa;display:block;margin-top:1px}
+.pts-col.korea-col .pts{color:#C8102E}
+.diff-col{text-align:center}
+.diff-col .pts{font-size:15px;font-weight:700;display:block}
+.diff-col .lbl{font-size:9px;color:#aaa;display:block;margin-top:1px}
+.badge{font-size:10px;font-weight:700;padding:5px 4px;border-radius:20px;white-space:nowrap;text-align:center;display:block}
+.b-me{background:#C8102E;color:#fff}
+.b-confirm{background:#00205B;color:#fff}
+.b-danger{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5}
+.b-safe{background:#dcfce7;color:#15803d;border:1px solid #86efac}
+.b-pending{background:#f0f0ee;color:#888;border:1px solid #d5d4d0}
+.cut-bar{background:#f4f4f2;padding:9px 14px;border-top:1px solid #e5e4e0;text-align:center;font-size:11px;color:#555}
+.cut-bar b{color:#C8102E}
+
+/* ── 오늘 경기 실시간 박스 ── */
+.today-games{border-radius:14px;overflow:hidden;border:2px solid #111;margin-bottom:12px}
+.today-hd{background:#00205B;padding:11px 14px;display:flex;align-items:center;justify-content:space-between}
+.today-hd span{color:#fff;font-size:13px;font-weight:700}
+.today-hd .refresh-btn{color:#FFD700;font-size:11px;cursor:pointer;background:none;border:1px solid #FFD700;border-radius:10px;padding:3px 10px}
+.game-row{display:flex;align-items:center;padding:11px 14px;background:#fff;border-bottom:1px solid #e5e4e0;gap:8px}
+.game-row:last-child{border-bottom:none}
+.game-grp{font-size:10px;font-weight:700;color:#aaa;width:28px;text-align:center;flex-shrink:0}
+.game-teams{flex:1;min-width:0}
+.game-teams .match{font-size:13px;font-weight:700;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-teams .time{font-size:10px;color:#aaa;margin-top:2px}
+.game-score-box{text-align:center;flex-shrink:0;min-width:60px}
+.game-score-box .score{font-size:18px;font-weight:700;color:#1a1a18;line-height:1}
+.game-score-box .state{font-size:10px;margin-top:2px;padding:2px 7px;border-radius:10px;display:inline-block}
+.state-be{background:#f0f0ee;color:#888}
+.state-lv{background:#fee2e2;color:#C8102E;animation:pulse 1.2s infinite}
+.state-ht{background:#fef3c7;color:#92400e}
+.state-gf{background:#dcfce7;color:#15803d}
+
+/* ── 조건 카드 ── */
+.cond-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.cond-card{border-radius:12px;border:2px solid #111;overflow:hidden;background:#fff}
+.cond-card.done{border-color:#86efac;opacity:.7}
+.cond-hd{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#fafaf8;border-bottom:1px solid #e5e4e0}
+.day-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0}
+.db-today{background:#C8102E;color:#fff}
+.db-tmr{background:#00205B;color:#fff}
+.db-day2{background:#e5e4e0;color:#555}
+.db-done{background:#dcfce7;color:#15803d}
+.cond-title{font-size:13px;font-weight:700;color:#1a1a18;flex:1;min-width:0}
+.cond-grp{font-size:10px;color:#aaa;flex-shrink:0}
+.cond-result{font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0}
+.result-good{background:#dcfce7;color:#15803d}
+.result-bad{background:#fee2e2;color:#b91c1c}
+.result-pending{background:#f0f0ee;color:#888}
+.cond-body{padding:9px 13px 11px}
+.rule{display:flex;align-items:flex-start;gap:7px;margin-bottom:5px}
+.rule:last-child{margin-bottom:0}
+.dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;margin-top:5px}
+.rule-txt{font-size:12px;color:#444;line-height:1.55}
+
+/* ── 경고 / 요약 ── */
+.warn{background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:12px 13px;display:flex;gap:8px;align-items:flex-start;margin-bottom:12px}
+.warn-txt{font-size:12px;color:#78350f;line-height:1.6}
+.summary{background:#00205B;border-radius:14px;padding:16px;text-align:center;border:2px solid #111;margin-bottom:8px}
+.summary p{color:rgba(255,255,255,.9);font-size:14px;line-height:1.8}
+.summary b{color:#FFD700}
+
+/* ── 로딩 / 에러 ── */
+.loading{text-align:center;padding:20px;color:#888;font-size:13px}
+.loading-spin{display:inline-block;animation:spin 1s linear infinite;font-size:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:#fff5f5;border:1px solid #fca5a5;border-radius:10px;padding:12px;text-align:center;font-size:12px;color:#b91c1c;margin:8px 0}
+
+.foot{text-align:center;font-size:10px;color:#aaa;margin-top:8px}
+.update-time{font-size:10px;color:#aaa;text-align:right;padding:4px 0 8px}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="hdr">
+  <div class="hdr-top">
+    <svg viewBox="0 0 900 600" width="54" height="36" style="border-radius:5px;border:2px solid #333;flex-shrink:0;display:block">
+      <rect width="900" height="600" fill="#fff"/>
+      <circle cx="450" cy="300" r="165" fill="#CD2E3A"/>
+      <path d="M450 135 a165 165 0 0 0 0 330 a82.5 82.5 0 0 0 0-165 a82.5 82.5 0 0 1 0-165Z" fill="#0047A0"/>
+      <circle cx="450" cy="217.5" r="82.5" fill="#CD2E3A"/>
+      <circle cx="450" cy="382.5" r="82.5" fill="#0047A0"/>
+      <g stroke="#000" stroke-width="26" stroke-linecap="round">
+        <line x1="135" y1="154" x2="282" y2="77"/><line x1="159" y1="196" x2="306" y2="119"/><line x1="183" y1="238" x2="330" y2="161"/>
+        <line x1="570" y1="439" x2="641" y2="401"/><line x1="668" y1="401" x2="740" y2="363"/>
+        <line x1="594" y1="481" x2="665" y2="443"/><line x1="692" y1="443" x2="763" y2="405"/>
+        <line x1="618" y1="523" x2="689" y2="485"/><line x1="716" y1="485" x2="787" y2="447"/>
+        <line x1="618" y1="77" x2="689" y2="115"/><line x1="716" y1="115" x2="787" y2="153"/>
+        <line x1="570" y1="119" x2="740" y2="211"/>
+        <line x1="594" y1="161" x2="665" y2="199"/><line x1="692" y1="199" x2="763" y2="237"/>
+        <line x1="113" y1="363" x2="283" y2="477"/>
+        <line x1="137" y1="405" x2="208" y2="443"/><line x1="235" y1="443" x2="306" y2="481"/>
+        <line x1="161" y1="447" x2="331" y2="561"/>
+      </g>
+    </svg>
+    <div class="hdr-text">
+      <h1>대한민국 32강 진출<br>경우의 수</h1>
+      <p>2026 북중미 월드컵 · A조 최종 3위</p>
+    </div>
+  </div>
+  <div class="hdr-stats">
+    <div class="hs"><div class="v">3점</div><div class="l">승점</div></div>
+    <div class="hs"><div class="v">-1</div><div class="l">골득실</div></div>
+    <div class="hs"><div class="v">1승2패</div><div class="l">성적</div></div>
+    <div class="hs"><div class="v">A조 3위</div><div class="l">최종순위</div></div>
+  </div>
+</div>
+
+<!-- 확률 -->
+<div class="prob">
+  <div class="prob-lbl">32강 진출 확률 (전문가 시뮬레이션)</div>
+  <div class="prob-row">
+    <div class="prob-num">87.8</div>
+    <div class="prob-pct">%</div>
+  </div>
+  <div class="prob-sub">12개 조 3위 중 <b>상위 8팀</b>만 32강 진출<br>우리 경기 끝 — 이제 <b>다른 경기 응원</b>만 남았어요!</div>
+  <div class="gauge"><div class="gauge-fill" style="width:0" id="gaugeFill"></div></div>
+</div>
+
+<!-- 오늘 실시간 경기 -->
+<div class="sec-hd">
+  <h2>⚡ 오늘 FIFA 월드컵 경기
+    <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+  </h2>
+</div>
+<div class="today-games">
+  <div class="today-hd">
+    <span id="todayTitle">경기 불러오는 중...</span>
+    <button class="refresh-btn" onclick="loadGames()">↻ 새로고침</button>
+  </div>
+  <div id="gameList"><div class="loading"><span class="loading-spin">⚽</span> 로딩 중...</div></div>
+</div>
+<div class="update-time" id="updateTime"></div>
+
+<!-- 3위팀 현황 -->
+<div class="sec-hd">
+  <h2>📋 3위팀 현황 (12개 조)</h2>
+  <div class="chip">8팀 통과</div>
+</div>
+<div class="team-list" id="standingsList">
+  <div id="standingsRows"><div class="loading"><span class="loading-spin">⚽</span> 로딩 중...</div></div>
+  <div class="cut-bar" id="cutBar">커트라인 <b>8위 안</b> · 로딩 중...</div>
+</div>
+
+<!-- 조건 카드 -->
+<div class="sec-hd"><h2>🔥 이렇게 되면 유리해요</h2></div>
+<div class="cond-list" id="condList">
+
+  <div class="cond-card" id="cond-D">
+    <div class="cond-hd">
+      <span class="day-badge db-today">오늘 6/26</span>
+      <span class="cond-title">파라과이 vs 호주</span>
+      <span class="cond-grp">D조</span>
+      <span class="cond-result result-pending" id="result-D">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">호주가 이기면 유리</div></div>
+      <div class="rule"><div class="dot"></div><div class="rule-txt">파라과이가 2골 차 이상 승리해도 유리</div></div>
+    </div>
+  </div>
+
+  <div class="cond-card" id="cond-I">
+    <div class="cond-hd">
+      <span class="day-badge db-today">오늘 6/26</span>
+      <span class="cond-title">세네갈 vs 이라크</span>
+      <span class="cond-grp">I조</span>
+      <span class="cond-result result-pending" id="result-I">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">세네갈–이라크가 비기면 유리</div></div>
+      <div class="rule"><div class="dot"></div><div class="rule-txt">세네갈이 1골 차 승리해도 유리</div></div>
+      <div class="rule"><div class="dot"></div><div class="rule-txt">이라크가 이겨도 1~4골 차면 유리</div></div>
+    </div>
+  </div>
+
+  <div class="cond-card" id="cond-G">
+    <div class="cond-hd">
+      <span class="day-badge db-tmr">내일 6/27</span>
+      <span class="cond-title">이집트 vs 이란</span>
+      <span class="cond-grp">G조</span>
+      <span class="cond-result result-pending" id="result-G">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">이집트가 이기면 유리</div></div>
+    </div>
+  </div>
+
+  <div class="cond-card" id="cond-H">
+    <div class="cond-hd">
+      <span class="day-badge db-tmr">내일 6/27</span>
+      <span class="cond-title">스페인 vs 우루과이 · 카보베르데 vs 사우디</span>
+      <span class="cond-grp">H조</span>
+      <span class="cond-result result-pending" id="result-H">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">스페인이 이기고, 카보베르데–사우디가 무승부면 유리</div></div>
+    </div>
+  </div>
+
+  <div class="cond-card" id="cond-L">
+    <div class="cond-hd">
+      <span class="day-badge db-tmr">내일 6/27</span>
+      <span class="cond-title">크로아티아 vs 가나</span>
+      <span class="cond-grp">L조</span>
+      <span class="cond-result result-pending" id="result-L">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">가나가 이기면 유리</div></div>
+    </div>
+  </div>
+
+  <div class="cond-card" id="cond-J">
+    <div class="cond-hd">
+      <span class="day-badge db-day2">모레 6/28</span>
+      <span class="cond-title">오스트리아 vs 알제리</span>
+      <span class="cond-grp">J조</span>
+      <span class="cond-result result-pending" id="result-J">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">오스트리아가 이기면 유리</div></div>
+      <div class="rule"><div class="dot"></div><div class="rule-txt">알제리가 2골 차 이상 이겨도 유리</div></div>
+    </div>
+  </div>
+
+  <div class="cond-card" id="cond-K">
+    <div class="cond-hd">
+      <span class="day-badge db-day2">모레 6/28</span>
+      <span class="cond-title">DR콩고 vs 우즈베키스탄</span>
+      <span class="cond-grp">K조</span>
+      <span class="cond-result result-pending" id="result-K">?</span>
+    </div>
+    <div class="cond-body">
+      <div class="rule"><div class="dot"></div><div class="rule-txt">DR콩고가 이기지 못하면 대체로 유리</div></div>
+      <div class="rule"><div class="dot"></div><div class="rule-txt">우즈벡이 이겨도 5골 차 이하면 유리</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 주의 -->
+<div class="warn">
+  <div style="font-size:20px;flex-shrink:0;line-height:1.2">⚠️</div>
+  <div class="warn-txt"><strong>주의!</strong> 완전 동률 시 페어플레이 점수(경고·퇴장 누적)까지 따집니다.</div>
+</div>
+
+<!-- 요약 -->
+<div class="summary">
+  <div style="font-size:26px;margin-bottom:8px">🙏</div>
+  <p>남은 9개 조 중 <b>한국보다 아래인 3위 팀 4팀 이상</b> 나오면 32강!<br>현재 스코틀랜드 1팀 확보 · <b>3팀만 더</b> 나와주면 됩니다</p>
+</div>
+
+<div class="foot" id="footNote">F조 완료 (일본1-1스웨덴 · 네덜란드3-1튀니지) · 로딩 중...</div>
+
+<script>
+// ── 상태 코드 매핑 ─────────────────────────────────────
+const STATE = {
+  S_BE: { label:'경기 전',   cls:'state-be', score: false },
+  S_LV: { label:'진행 중',   cls:'state-lv', score: true  },
+  S_HT: { label:'하프타임',  cls:'state-ht', score: true  },
+  S_GF: { label:'종료',      cls:'state-gf', score: true  },
+  S_PP: { label:'연기',      cls:'state-be', score: false },
+  S_CA: { label:'취소',      cls:'state-be', score: false },
+};
+
+// ── GAME_ID 기반 조건 매핑 (API에서 직접 확인한 실제 ID) ─
+// 팀명 문자열 매칭 대신 고정 GAME_ID로 판정 → 100% 정확
+const GAME_COND = {
+  // 6/26
+  'OT20262724868695': { condId:'D',  judge: (hs,as) => as > hs || (hs-as) >= 2 },  // 파라과이 vs 호주: 호주승 OR 파라 2골+
+  'OT20262724868700': { condId:'E1', judge: (hs,as) => as > hs || (as-hs) >= 2 },  // 에콰도르 vs 독일: 독일승 OR 독일 2골+ (E조 조건)
+  'OT20262724868701': { condId:'E2', judge: (hs,as) => hs <= as },                  // 퀴라소 vs 코트디부아르: 퀴라소 미승리
+  'OT20262724868707': { condId:'F',  judge: (hs,as) => hs - as >= 2 },              // 일본 vs 스웨덴: 일본 2골차+ 승
+  // 6/27
+  'OT20262724868725': { condId:'I',  judge: (hs,as) => {                            // 세네갈 vs 이라크
+    const diff = Math.abs(hs-as);
+    if (diff === 0) return true;           // 무승부
+    if (hs > as && diff === 1) return true; // 세네갈 1골차
+    if (as > hs && diff >= 1 && diff <= 4) return true; // 이라크 1~4골차
+    return false;
+  }},
+  'OT20262724868713': { condId:'G',  judge: (hs,as) => hs > as },                  // 이집트 vs 이란: 이집트 승
+  'OT20262724868718': { condId:'H1', judge: (hs,as) => as > hs },                  // 우루과이 vs 스페인: 스페인 승
+  'OT20262724868719': { condId:'H2', judge: (hs,as) => hs === as },                // 카보베르데 vs 사우디: 무승부
+  // 6/28
+  'OT20262724868744': { condId:'L',  judge: (hs,as) => as > hs },                  // 크로아티아 vs 가나: 가나 승
+  'OT20262724868732': { condId:'J',  judge: (hs,as) => as > hs || (hs-as) >= 2 }, // 알제리 vs 오스트리아: 오스트리아 승 OR 알제리 2골+
+  'OT20262724868738': { condId:'K',  judge: (hs,as) => hs <= as || (as-hs) <= 5 },// DR콩고 vs 우즈벡: 콩고 미승리 OR 우즈벡 5골차 이하
+};
+
+// H조는 두 경기 모두 봐야 함 (스페인 승 AND 카보베르데 무승부)
+let condH1 = null, condH2 = null;
+
+// ── GAME_ID 기반 조건 판정 ──────────────────────────────
+function judgeAllConditions(games) {
+  condH1 = null; condH2 = null;
+  const verdicts = {};
+
+  for (const g of games) {
+    if (g.state !== 'S_GF') continue; // 종료 경기만
+    const cond = GAME_COND[g.gameId];
+    if (!cond) continue;
+
+    const hs = parseInt(g.homeScore) || 0;
+    const as = parseInt(g.awayScore) || 0;
+    const result = cond.judge(hs, as);
+
+    if (cond.condId === 'H1') condH1 = result;
+    else if (cond.condId === 'H2') condH2 = result;
+    else verdicts[cond.condId] = result ? 'good' : 'bad';
+  }
+
+  // H조: 두 조건 모두 충족해야 유리
+  if (condH1 !== null && condH2 !== null) {
+    verdicts['H'] = (condH1 && condH2) ? 'good' : 'bad';
+  } else if (condH1 !== null || condH2 !== null) {
+    verdicts['H'] = null; // 아직 한 경기 진행 중
+  }
+
+  return verdicts;
+}
+
+// ── 국기 SVG 매핑 ───────────────────────────────────────
+const FLAGS = {
+  '보스니아헤르체고비나': `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#002395"/><polygon points="450,20 820,580 80,580" fill="#FECB00"/><g fill="#fff"><circle cx="474" cy="60" r="26"/><circle cx="521" cy="133" r="26"/><circle cx="568" cy="206" r="26"/><circle cx="615" cy="279" r="26"/><circle cx="662" cy="352" r="26"/><circle cx="709" cy="425" r="26"/><circle cx="756" cy="498" r="26"/><circle cx="430" cy="540" r="26"/></g></svg>`,
+  '에콰도르':    `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#FFD100"/><rect y="300" width="900" height="150" fill="#003DA5"/><rect y="450" width="900" height="150" fill="#C8102E"/><ellipse cx="450" cy="285" rx="60" ry="46" fill="#fff" opacity=".9"/></svg>`,
+  '스웨덴':      `<svg viewBox="0 0 16 11"><rect width="16" height="11" fill="#006AA7"/><rect x="5" width="2" height="11" fill="#FECC02"/><rect y="4" width="16" height="3" fill="#FECC02"/></svg>`,
+  '대한민국':    `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#fff"/><circle cx="450" cy="300" r="165" fill="#CD2E3A"/><path d="M450 135 a165 165 0 0 0 0 330 a82.5 82.5 0 0 0 0-165 a82.5 82.5 0 0 1 0-165Z" fill="#0047A0"/><circle cx="450" cy="217.5" r="82.5" fill="#CD2E3A"/><circle cx="450" cy="382.5" r="82.5" fill="#0047A0"/></svg>`,
+  '스코틀랜드':  `<svg viewBox="0 0 12 8"><rect width="12" height="8" fill="#003399"/><line x1="0" y1="0" x2="12" y2="8" stroke="#fff" stroke-width="1.8"/><line x1="12" y1="0" x2="0" y2="8" stroke="#fff" stroke-width="1.8"/></svg>`,
+  '미국':        `<svg viewBox="0 0 19 10"><rect width="19" height="10" fill="#B22234"/><g fill="#fff"><rect y="0.77" width="19" height="0.77"/><rect y="2.31" width="19" height="0.77"/><rect y="3.85" width="19" height="0.77"/><rect y="5.38" width="19" height="0.77"/><rect y="6.92" width="19" height="0.77"/><rect y="8.46" width="19" height="0.77"/></g><rect width="7.6" height="5.38" fill="#3C3B6E"/></svg>`,
+  '알제리':      `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#fff"/><rect width="450" height="600" fill="#006233"/></svg>`,
+  '세네갈':      `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#00853F"/><rect x="300" width="300" height="600" fill="#FDEF42"/><rect x="600" width="300" height="600" fill="#E31B23"/></svg>`,
+  '이란':        `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#239F40"/><rect y="200" width="900" height="200" fill="#fff"/><rect y="400" width="900" height="200" fill="#DA0000"/></svg>`,
+  '카보베르데':  `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#003893"/><rect y="266" width="900" height="66" fill="#fff"/><rect y="280" width="900" height="40" fill="#CF2027"/></svg>`,
+  'DR콩고':     `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#007FFF"/><line x1="0" y1="600" x2="900" y2="0" stroke="#F7D618" stroke-width="120"/><circle cx="120" cy="120" r="100" fill="#CE1021"/></svg>`,
+  '파나마':      `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#fff"/><rect width="450" height="300" fill="#fff"/><rect x="450" width="450" height="300" fill="#DB121A"/><rect y="300" width="450" height="300" fill="#1B4FC0"/><rect x="450" y="300" width="450" height="300" fill="#fff"/></svg>`,
+};
+function getFlag(name) {
+  return FLAGS[name] || `<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#e1e0d9"/></svg>`;
+}
+
+// ── 서버에서 받은 3위팀 데이터로 순위표 렌더링 ────────────
+function renderStandingsFromServer(thirds) {
+  const rows = document.getElementById('standingsRows');
+  const cutBar = document.getElementById('cutBar');
+  if (!rows) return;
+  const KOREA = { pts:3, gd:-1 };
+  let html = '';
+  let aheadCount = 0, belowCount = 0, pendingCount = 0;
+  thirds.forEach((t, i) => {
+    const isKorea  = (t.name === '대한민국');
+    const isAhead  = !isKorea && (t.pts > KOREA.pts || (t.pts===KOREA.pts && t.gd>KOREA.gd));
+    const isBelow  = !isKorea && t.done && !isAhead;
+    if (isAhead && t.done) aheadCount++;
+    if (isBelow) belowCount++;
+    if (!t.done && !isKorea) pendingCount++;
+    const gdStr   = t.gd >= 0 ? `+${t.gd}` : `${t.gd}`;
+    const gdColor = t.gd > 0 ? '#15803d' : (t.gd < 0 ? '#b91c1c' : '#555');
+    let rowCls, numCls, nmCls, badgeHtml;
+    if (isKorea) {
+      rowCls='me'; numCls='red'; nmCls='korea';
+      badgeHtml='<span class="badge b-me">대기 중</span>';
+    } else if (isAhead && t.done) {
+      rowCls='bad'; numCls='dred'; nmCls='';
+      badgeHtml='<span class="badge b-danger">우리보다 위</span>';
+    } else if (isBelow) {
+      rowCls='good'; numCls='green'; nmCls='green';
+      badgeHtml='<span class="badge b-safe">우리보다 아래</span>';
+    } else if (!t.done) {
+      rowCls='dim'; numCls=''; nmCls='';
+      badgeHtml='<span class="badge b-pending">결과 대기</span>';
+    } else {
+      rowCls='bad'; numCls='dred'; nmCls='';
+      badgeHtml='<span class="badge b-danger">우리보다 위</span>';
+    }
+    const rank = isKorea ? '👉' : (i+1);
+    html += `<div class="team-row ${rowCls}">
+      <div class="rank-num ${numCls}">${rank}</div>
+      <div class="flag-wrap">${getFlag(t.name)}</div>
+      <div class="team-info"><div class="nm ${nmCls}">${t.name}</div><div class="sub">${t.group}조${t.done?'':' · 진행중'}</div></div>
+      <div class="pts-col ${isKorea?'korea-col':''}"><div class="pts">${t.pts}</div><div class="lbl">승점</div></div>
+      <div class="diff-col"><div class="pts" style="color:${gdColor}">${gdStr}</div><div class="lbl">득실</div></div>
+      ${badgeHtml}
+    </div>`;
+  });
+  rows.innerHTML = html;
+  cutBar.innerHTML = `커트라인 <b>8위 안</b> · 우리 위 <b>${aheadCount}팀</b> 확정 · 아래 <b>${belowCount}팀</b> 확보 · 미정 <b>${pendingCount}팀</b>`;
+}
+
+// ── 3위팀 고정 데이터 (확정된 조) ────────────────────────
+// API에 GROUP_NAME 필드 없음 → GAME_ID로 조별리그 결과 집계
+// 이미 완료된 조(A/B/C/F)는 하드코딩, 진행 중인 조는 API로 계산
+const FIXED_THIRDS = [
+  { group:'B', name:'보스니아', pts:4, gd:+1, confirmed:true,  verdict:'bad'  },
+  { group:'C', name:'스코틀랜드', pts:3, gd:-3, confirmed:true, verdict:'good' },
+];
+
+// ── GAME_ID → 조/팀 매핑 (3위팀 집계용) ──────────────────
+// 각 조의 전체 경기 목록 (팀ID 포함)
+const GROUP_GAMES = {
+  // 에콰도르 확정 32강 (E조 3위가 아님 → E조 3위 별도 판단 불필요)
+  D: { gameIds: ['OT20262724868695','OT20262724868694'], teams: {
+    'OT21630':'파라과이','OT2156':'호주','OT22248':'튀르키예','OT22281':'미국'
+  }},
+  // I조: 세네갈 vs 이라크 (6/27)
+  I: { gameIds: ['OT20262724868725'], teams: {
+    'OT21941':'세네갈','OT21179':'이라크'
+  }},
+  G: { gameIds: ['OT20262724868713'], teams: { 'OT2658':'이집트','OT21178':'이란' }},
+  H: { gameIds: ['OT20262724868718','OT20262724868719'], teams: {
+    'OT22300':'우루과이','OT22137':'스페인','OT2402':'카보베르데','OT21897':'사우디'
+  }},
+  L: { gameIds: ['OT20262724868744'], teams: { 'OT2514':'크로아티아','OT21038':'가나' }},
+  J: { gameIds: ['OT20262724868732'], teams: { 'OT278':'알제리','OT2177':'오스트리아' }},
+  K: { gameIds: ['OT20262724868738'], teams: { 'OT2475':'DR콩고','OT22301':'우즈베키스탄' }},
+};
+
+// ── 3위팀 현황 렌더링 ─────────────────────────────────────
+function renderStandings(allGames) {
+  // API 결과로 각 조 성적 집계
+  const groupStats = {}; // { groupId: { teamName: {pts,gf,ga} } }
+
+  for (const [grpId, grpInfo] of Object.entries(GROUP_GAMES)) {
+    groupStats[grpId] = {};
+    for (const teamName of Object.values(grpInfo.teams)) {
+      groupStats[grpId][teamName] = { pts:0, gf:0, ga:0, played:0 };
+    }
+  }
+
+  for (const g of allGames) {
+    if (g.state !== 'S_GF') continue;
+    for (const [grpId, grpInfo] of Object.entries(GROUP_GAMES)) {
+      if (!grpInfo.gameIds.includes(g.gameId)) continue;
+      const homeName = grpInfo.teams[g.homeTeamId] || g.homeTeam;
+      const awayName = grpInfo.teams[g.awayTeamId] || g.awayTeam;
+      if (!groupStats[grpId]) continue;
+      const hs = parseInt(g.homeScore)||0, as = parseInt(g.awayScore)||0;
+      if (!groupStats[grpId][homeName]) groupStats[grpId][homeName]={pts:0,gf:0,ga:0,played:0};
+      if (!groupStats[grpId][awayName]) groupStats[grpId][awayName]={pts:0,gf:0,ga:0,played:0};
+      const ht = groupStats[grpId][homeName], at = groupStats[grpId][awayName];
+      ht.gf+=hs; ht.ga+=as; ht.played++;
+      at.gf+=as; at.ga+=hs; at.played++;
+      if(hs>as){ht.pts+=3;}else if(hs===as){ht.pts+=1;at.pts+=1;}else{at.pts+=3;}
+    }
+  }
+
+  // 각 조 3위 추출
+  const dynamicThirds = [];
+  for (const [grpId, teams] of Object.entries(groupStats)) {
+    const sorted = Object.entries(teams)
+      .sort(([,a],[,b]) => b.pts-a.pts || (b.gf-b.ga)-(a.gf-a.ga) || b.gf-a.gf);
+    // 해당 조의 경기가 완료됐는지 확인
+    const grpGames = allGames.filter(g => GROUP_GAMES[grpId]?.gameIds.includes(g.gameId));
+    const allDone  = grpGames.length > 0 && grpGames.every(g => g.state === 'S_GF');
+    if (sorted.length >= 3 && allDone) {
+      const [name, stat] = sorted[2];
+      dynamicThirds.push({ group:grpId, name, pts:stat.pts, gd:stat.gf-stat.ga, confirmed:allDone, verdict:'unknown' });
+    }
+  }
+
+  // 고정 + 동적 합치기
+  const allThirds = [
+    ...FIXED_THIRDS,
+    // 에콰도르는 32강 확정 (E조 2위), 표시 제외
+    ...dynamicThirds,
+    { group:'pending', name:'미정', pts:null, gd:null, confirmed:false, verdict:'pending' },
+  ];
+
+  // 승점 내림차순 정렬
+  const sorted = allThirds
+    .filter(t => t.pts !== null)
+    .sort((a,b) => b.pts-a.pts || b.gd-a.gd);
+
+  // 한국 위치 계산
+  const KOREA = { pts:3, gd:-1 };
+  const aheadOfKorea = sorted.filter(t => t.pts > KOREA.pts || (t.pts === KOREA.pts && t.gd > KOREA.gd)).length;
+  const pendingCount = 12 - sorted.length - 1; // -1 에콰도르(2위)
+
+  // 렌더링
+  const rows = document.getElementById('standingsRows');
+  const cutBar = document.getElementById('cutBar');
+  if (!rows) return;
+
+  let html = '';
+  let rank = 1;
+
+  // 한국보다 앞선 팀들
+  for (const t of sorted) {
+    const isAhead = t.pts > KOREA.pts || (t.pts === KOREA.pts && t.gd > KOREA.gd);
+    const cls = isAhead ? 'bad' : 'good';
+    const badge = isAhead
+      ? '<span class="badge b-danger">우리보다 위</span>'
+      : '<span class="badge b-safe">우리보다 아래</span>';
+    const gdStr = t.gd > 0 ? `+${t.gd}` : `${t.gd}`;
+    const gdColor = t.gd > 0 ? '#15803d' : (t.gd < 0 ? '#b91c1c' : '#555');
+    html += `
+    <div class="team-row ${cls}">
+      <div class="rank-num ${isAhead?'dred':'green'}">${rank++}</div>
+      <div class="flag-wrap">${getFlag(t.name)}</div>
+      <div class="team-info"><div class="nm ${isAhead?'':'green'}">${t.name}</div><div class="sub">${t.group}조</div></div>
+      <div class="pts-col"><div class="pts">${t.pts}</div><div class="lbl">승점</div></div>
+      <div class="diff-col"><div class="pts" style="color:${gdColor}">${gdStr}</div><div class="lbl">득실</div></div>
+      ${badge}
+    </div>`;
+  }
+
+  // 한국 행
+  html += `
+  <div class="team-row me">
+    <div class="rank-num red">👉</div>
+    <div class="flag-wrap">${getFlag('대한민국')}</div>
+    <div class="team-info"><div class="nm korea">대한민국</div><div class="sub">A조</div></div>
+    <div class="pts-col korea-col"><div class="pts">3</div><div class="lbl">승점</div></div>
+    <div class="diff-col"><div class="pts" style="color:#C8102E">-1</div><div class="lbl">득실</div></div>
+    <div class="badge b-me">대기 중</div>
+  </div>`;
+
+  // 미정 팀들 (에콰도르 32강 확정 제외)
+  const pendingReal = 12 - sorted.length - 1 - 1; // 한국, 에콰도르 제외
+  if (pendingReal > 0) {
+    html += `
+    <div class="team-row dim">
+      <div class="rank-num">—</div>
+      <div class="flag-wrap" style="background:#e1e0d9"></div>
+      <div class="team-info"><div class="nm">${pendingReal}개 조 3위</div><div class="sub">결과 대기 중</div></div>
+      <div class="pts-col"><div class="pts" style="color:#aaa">?</div><div class="lbl">승점</div></div>
+      <div class="diff-col"><div class="pts" style="color:#aaa">?</div><div class="lbl">득실</div></div>
+      <div class="badge b-pending">미정</div>
+    </div>`;
+  }
+
+  // 에콰도르 별도 표시
+  html += `
+  <div class="team-row bad" style="opacity:.6">
+    <div class="rank-num dred">★</div>
+    <div class="flag-wrap">${getFlag('에콰도르')}</div>
+    <div class="team-info"><div class="nm">에콰도르</div><div class="sub">E조 · 32강 확정</div></div>
+    <div class="pts-col"><div class="pts">4</div><div class="lbl">승점</div></div>
+    <div class="diff-col"><div class="pts" style="color:#555">0</div><div class="lbl">득실</div></div>
+    <div class="badge b-confirm">32강 확정!</div>
+  </div>`;
+
+  rows.innerHTML = html;
+
+  // cut-bar 업데이트
+  const needed = Math.max(0, 4 - sorted.filter(t => !(t.pts > KOREA.pts || (t.pts === KOREA.pts && t.gd > KOREA.gd))).length);
+  cutBar.innerHTML = `커트라인 <b>8위 안</b> · 한국 위로 ${aheadOfKorea}팀 확정 → 아래 팀 <b>${sorted.filter(t=>!(t.pts>KOREA.pts||(t.pts===KOREA.pts&&t.gd>KOREA.gd))).length}팀</b> 확보 · <b>${pendingReal}팀 미정</b>`;
+}
+
+// ── 조건 카드 hide/collapse ──────────────────────────────
+// 경기 종료 + 결과 확정 → 카드 접기 (✅/❌ 뱃지만 표시, 조건 숨김)
+function updateCondCards(verdicts, games) {
+  ['D','E','F','I','G','H','L','J','K'].forEach(grp => {
+    const verdict = verdicts[grp];
+    const resultEl = document.getElementById(`result-${grp}`);
+    const card     = document.getElementById(`cond-${grp}`);
+    const body     = card?.querySelector('.cond-body');
+    const dayBadge = card?.querySelector('.day-badge');
+    if (!resultEl || !card) return;
+
+    if (verdict === 'good') {
+      resultEl.textContent = '✅ 유리';
+      resultEl.className = 'cond-result result-good';
+      // 카드 접기: body 숨기고 헤더만 남김
+      if (body) body.style.display = 'none';
+      if (dayBadge) { dayBadge.textContent = '종료'; dayBadge.className = 'day-badge db-done'; }
+      card.style.borderColor = '#86efac';
+      card.style.opacity = '0.85';
+    } else if (verdict === 'bad') {
+      resultEl.textContent = '❌ 불리';
+      resultEl.className = 'cond-result result-bad';
+      if (body) body.style.display = 'none';
+      if (dayBadge) { dayBadge.textContent = '종료'; dayBadge.className = 'day-badge db-done'; }
+      card.style.borderColor = '#fca5a5';
+      card.style.opacity = '0.75';
+    } else {
+      // 미정: 원래대로
+      resultEl.textContent = '?';
+      resultEl.className = 'cond-result result-pending';
+      if (body) body.style.display = '';
+    }
+  });
+}
+
+// ── 경기 카드 렌더링 ────────────────────────────────────
+function renderGames(games) {
+  const el = document.getElementById('gameList');
+  const title = document.getElementById('todayTitle');
+
+  if (!games || games.length === 0) {
+    el.innerHTML = '<div class="loading">오늘 FIFA 월드컵 경기 없음</div>';
+    title.textContent = '경기 없음';
+    renderStandings([]);
+    return;
+  }
+
+  title.textContent = `FIFA 월드컵 · ${games.length}경기`;
+
+  el.innerHTML = games.map(g => {
+    const s = STATE[g.state] || { label: g.state, cls:'state-be', score: false };
+    const scoreHtml = s.score
+      ? `<div class="score">${g.homeScore ?? 0} - ${g.awayScore ?? 0}</div>`
+      : `<div class="score" style="font-size:13px;color:#888">${g.matchTime}</div>`;
+    return `
+    <div class="game-row">
+      <div class="game-grp">${g.groupName || '—'}조</div>
+      <div class="game-teams">
+        <div class="match">${g.homeTeam} vs ${g.awayTeam}</div>
+        <div class="time">${g.matchTime} KST</div>
+      </div>
+      <div class="game-score-box">
+        ${scoreHtml}
+        <span class="state ${s.cls}">${s.label}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 3위팀 현황 동적 업데이트
+  renderStandings(games);
+
+  // 조건 판정 + 카드 collapse
+  const verdicts = judgeAllConditions(games);
+  updateCondCards(verdicts, games);
+}
+
+// ── API 호출 ────────────────────────────────────────────
+async function loadGames() {
+  // 로컬(file://) 환경 감지 → Psynet API 직접 호출
+  const isLocal = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const AUTH_KEY = 'YlXPJojo8hVs5iFeWfZBRE7SJ8cXOUHF';
+  const BASE = 'https://data.psynet.co.kr/data3V1/livescore';
+
+  try {
+    let data;
+
+    if (isLocal) {
+      // 로컬: Psynet API 직접 호출 (CORS 가능 여부에 따라 동작)
+      const today = new Date(Date.now() + 9*60*60*1000).toISOString().slice(0,10).replace(/-/g,'');
+      const tomorrow = new Date(Date.now() + (9+24)*60*60*1000).toISOString().slice(0,10).replace(/-/g,'');
+      const [r1, r2] = await Promise.all([
+        fetch(`${BASE}/gameList?auth_key=${AUTH_KEY}&search_date=${today}&compe=soccer`),
+        fetch(`${BASE}/gameList?auth_key=${AUTH_KEY}&search_date=${tomorrow}&compe=soccer`),
+      ]);
+      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      const wc = g => g.LEAGUE_ID === 'OT272';
+      const fmt = g => ({
+        gameId: g.GAME_ID, matchDate: g.MATCH_DATE, matchTime: g.MATCH_TIME,
+        homeTeam: g.HOME_TEAM_SHORT_NAME||g.HOME_TEAM_NAME,
+        awayTeam: g.AWAY_TEAM_SHORT_NAME||g.AWAY_TEAM_NAME,
+        homeTeamId: g.HOME_TEAM_ID, awayTeamId: g.AWAY_TEAM_ID,
+        homeScore: g.HOME_SCORE, awayScore: g.AWAY_SCORE, state: g.STATE_TXT_CODE,
+      });
+      const games = [...(d1?.Data?.list||[]).filter(wc), ...(d2?.Data?.list||[]).filter(wc)].map(fmt);
+      data = { games, thirds: null, updatedAt: new Date().toISOString() };
+    } else {
+      // 배포 환경: Netlify Function 프록시
+      const res = await fetch('/api/games');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+    }
+
+    renderGames(data.games || []);
+    if (data.thirds) renderStandingsFromServer(data.thirds);
+    // 로컬에서 thirds 없을 때 → 고정 데이터로 fallback
+    if (!data.thirds) renderStandingsFromServer(FALLBACK_THIRDS);
+
+    const t = new Date(data.updatedAt).toLocaleString('ko-KR', { timeZone:'Asia/Seoul' });
+    document.getElementById('updateTime').textContent = `마지막 업데이트: ${t}${isLocal?' (로컬)':' (20분 갱신)'}`;
+    document.getElementById('footNote').textContent = `6/26 기준 · ${t}`;
+
+  } catch(err) {
+    console.error(err);
+    // API 실패해도 고정 데이터는 보여줌
+    renderStandingsFromServer(FALLBACK_THIRDS);
+    document.getElementById('gameList').innerHTML =
+      `<div class="error-box">⚠️ 실시간 데이터 로드 실패 (${err.message})<br>배포 환경(Netlify)에서는 정상 동작합니다.</div>`;
+  }
+}
+
+// ── 초기화 ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // 확률 게이지 애니메이션
+  setTimeout(() => {
+    document.getElementById('gaugeFill').style.width = '87.8%';
+  }, 300);
+
+  // 경기 로드
+  loadGames();
+
+// ── 로컬 테스트용 fallback 고정 데이터 ──────────────────
+const FALLBACK_THIRDS = [
+  { group:'F', name:'스웨덴',            pts:4, gd: 0, gf:7,  done:true  },
+  { group:'E', name:'에콰도르',           pts:4, gd: 0, gf:2,  done:true  },
+  { group:'D', name:'미국',              pts:3, gd:+1, gf:4,  done:true  },
+  { group:'B', name:'보스니아헤르체고비나', pts:3, gd:-1, gf:4,  done:true  },
+  { group:'A', name:'대한민국',           pts:3, gd:-1, gf:2,  done:true  },
+  { group:'J', name:'알제리',            pts:3, gd:-2, gf:2,  done:true  },
+  { group:'C', name:'스코틀랜드',         pts:3, gd:-3, gf:1,  done:true  },
+  { group:'G', name:'이란',              pts:1, gd: 0, gf:0,  done:false },
+  { group:'H', name:'카보베르데',         pts:1, gd: 0, gf:2,  done:false },
+  { group:'K', name:'DR콩고',           pts:1, gd: 0, gf:1,  done:false },
+  { group:'L', name:'파나마',            pts:0, gd:-1, gf:0,  done:false },
+  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3,  done:true  },
+];
+
+  // ── 스마트 폴링 ───────────────────────────────────────
+  // 탭이 숨겨지면 멈추고, 다시 보이면 즉시 갱신 → 불필요한 요청 제거
+  let pollTimer = null;
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(loadGames, 60 * 1000); // 60초
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopPolling();  // 탭 숨겨지면 갱신 중단
+    } else {
+      loadGames();    // 탭 돌아오면 즉시 1회 갱신
+      startPolling(); // 폴링 재시작
+    }
+  });
+
+  startPolling();
+});
+</script>
+</body>
+</html>
