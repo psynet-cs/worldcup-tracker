@@ -165,9 +165,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 
 <!-- 확률 -->
 <div class="prob">
-  <div class="prob-lbl">32강 진출 확률 (옵타 추정 · 6/26 기준)</div>
+  <div class="prob-lbl">32강 진출 확률 (옵타 추정 · 6/27 기준)</div>
   <div class="prob-row">
-    <div class="prob-num">53.2</div>
+    <div class="prob-num">36.0</div>
     <div class="prob-pct">%</div>
   </div>
   <div class="prob-sub">12개 조 3위 중 <b>상위 8팀</b>만 32강 진출<br>축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치</div>
@@ -472,8 +472,8 @@ function renderStandingsFromServer(thirds) {
   // ── 진출확률: 옵타(Opta) 발표 수치 수동 표기 ──────────────
   // 자동 계산이 아님. 옵타 슈퍼컴퓨터 추정치를 사용.
   // 수치가 갱신되면 아래 OPTA_PROB / OPTA_ASOF 두 값만 바꾸면 됨.
-  const OPTA_PROB = 53.2;     // % (옵타 발표값)
-  const OPTA_ASOF = '6/26';   // 기준일
+  const OPTA_PROB = 36.0;     // % (옵타 발표값, 세네갈 5-0 이라크 반영)
+  const OPTA_ASOF = '6/27';   // 기준일
   const probNum = document.querySelector('.prob-num');
   const gauge   = document.getElementById('gaugeFill');
   if (probNum) probNum.textContent = OPTA_PROB.toFixed(1);
@@ -729,6 +729,7 @@ const FALLBACK_THIRDS = [
   { group:'E', name:'에콰도르',           pts:4, gd: 0, gf:2, done:true  },
   { group:'B', name:'보스니아헤르체고비나', pts:4, gd:-1, gf:5, done:true  },
   { group:'D', name:'파라과이',           pts:4, gd:-2, gf:2, done:true  },
+  { group:'I', name:'세네갈',            pts:3, gd:+2, gf:8, done:true  },
   { group:'L', name:'크로아티아',          pts:3, gd:-1, gf:3, done:false },
   { group:'A', name:'대한민국',           pts:3, gd:-1, gf:2, done:true  },
   { group:'J', name:'알제리',            pts:3, gd:-2, gf:2, done:false },
@@ -736,7 +737,6 @@ const FALLBACK_THIRDS = [
   { group:'H', name:'카보베르데',         pts:2, gd: 0, gf:2, done:false },
   { group:'G', name:'벨기에',            pts:2, gd: 0, gf:1, done:false },
   { group:'K', name:'콩고민주공화국',      pts:1, gd:-1, gf:1, done:false },
-  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3, done:false },
 ];
 
 async function loadGames() {
