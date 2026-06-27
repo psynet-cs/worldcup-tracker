@@ -487,6 +487,24 @@ function renderStandingsFromServer(thirds) {
   if (probSub) probSub.innerHTML =
     `12개 조 3위 중 <b>상위 8팀</b>만 32강 진출 · 우리 위 <b>${aheadCount}팀</b> 확정<br>` +
     `축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치`;
+
+  // ── 요약 박스 자동 계산 ──────────────────────────────────
+  const koreaRank   = thirds.findIndex(t => t.name === '대한민국') + 1;
+  const pendingAbove = thirds.filter(t => !t.done && t.name !== '대한민국' && aboveKorea(t)).length;
+  const threshold   = 8 - aheadCount; // 미정 조 3위 중 한국을 넘는 팀이 이 수 이상이면 탈락
+  const summaryP = document.querySelector('.summary p');
+  if (summaryP && koreaRank > 0) {
+    if (pendingCount === 0) {
+      summaryP.innerHTML = (koreaRank <= 8)
+        ? `🎉 한국 <b>${koreaRank}위</b> — 32강 진출 확정!`
+        : `한국 <b>${koreaRank}위</b> — 32강 진출 불발`;
+    } else {
+      summaryP.innerHTML =
+        `한국 현재 <b>${koreaRank}위</b> · 한국 위 <b>${aheadCount}팀</b> 확정<br>` +
+        `남은 <b>${pendingCount}개 조</b> 3위 중 한국을 넘는 팀이 <b>${threshold}팀 이상</b>이면 탈락` +
+        ` (지금 <b>${pendingAbove}팀</b>이 위)`;
+    }
+  }
 }
 
 // ── 3위팀 고정 데이터 (확정된 조) ────────────────────────
@@ -822,7 +840,7 @@ async function loadGames() {
 
     const t = new Date(data.updatedAt).toLocaleString('ko-KR', { timeZone:'Asia/Seoul' });
     document.getElementById('updateTime').textContent = `마지막 업데이트: ${t}${isLocal?' (로컬)':' (20분 갱신)'}`;
-    document.getElementById('footNote').textContent = `6/26 기준 · ${t}`;
+    document.getElementById('footNote').textContent = `순위 자동 갱신 · ${t}`;
 
   } catch(err) {
     console.error(err);
