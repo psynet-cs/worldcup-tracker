@@ -17,6 +17,7 @@ const FIXED_THIRDS_DATA = [
   { group:'E', name:'에콰도르',           pts:4, gd: 0, gf:2, done:true  },
   { group:'B', name:'보스니아헤르체고비나', pts:4, gd:-1, gf:5, done:true  },
   { group:'D', name:'파라과이',           pts:4, gd:-2, gf:2, done:true  },
+  { group:'I', name:'세네갈',            pts:3, gd:+2, gf:8, done:true  },
   { group:'L', name:'크로아티아',          pts:3, gd:-1, gf:3, done:false },
   { group:'A', name:'대한민국',           pts:3, gd:-1, gf:2, done:true  },
   { group:'J', name:'알제리',            pts:3, gd:-2, gf:2, done:false },
@@ -24,7 +25,6 @@ const FIXED_THIRDS_DATA = [
   { group:'H', name:'카보베르데',         pts:2, gd: 0, gf:2, done:false },
   { group:'G', name:'벨기에',            pts:2, gd: 0, gf:1, done:false },
   { group:'K', name:'콩고민주공화국',      pts:1, gd:-1, gf:1, done:false },
-  { group:'I', name:'세네갈',            pts:0, gd:-3, gf:3, done:false },
 ];
 
 function updateThirds(thirds, todayGames) {
