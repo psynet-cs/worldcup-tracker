@@ -649,37 +649,54 @@ function renderStandings(allGames) {
   cutBar.innerHTML = `커트라인 <b>8위 안</b> · 한국 위로 ${aheadOfKorea}팀 확정 → 아래 팀 <b>${sorted.filter(t=>!(t.pts>KOREA.pts||(t.pts===KOREA.pts&&t.gd>KOREA.gd))).length}팀</b> 확보 · <b>${pendingReal}팀 미정</b>`;
 }
 
-// ── 조건 카드 hide/collapse ──────────────────────────────
-// 경기 종료 + 결과 확정 → 카드 접기 (✅/❌ 뱃지만 표시, 조건 숨김)
+// ── 조건 카드: 날짜 동적 + 결과/이유 표시 ──────────────────
+// 카드별 경기 날짜(표시 창 밖이어도 결과 보강), 종료 경기는 결과·이유를 본문에 노출
+const COND_DATE = { D:'20260626', I:'20260627', G:'20260627', H:'20260627', L:'20260628', J:'20260628', K:'20260628' };
+const COND_RESULTS = {
+  D: { verdict:'bad',  txt:'파라과이 0-0 호주 무승부 → 파라과이 승점4·D조 3위로 한국보다 위 (불리)' },
+  I: { verdict:'bad',  txt:'세네갈 5-0 이라크 대승 → 세네갈 득실 +2로 한국 추월 (불리)' },
+  H: { verdict:'good', txt:'스페인 1-0 승 + 카보베르데 0-0 무승부 → H조 3위는 우루과이(한국 아래) (유리)' },
+};
+function dayBadgeLabel(md) {
+  if (!md) return null;
+  const now = new Date(Date.now() + 9*3600000); // KST
+  const t  = Date.UTC(+md.slice(0,4), +md.slice(4,6)-1, +md.slice(6,8));
+  const d0 = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const diff = Math.round((t - d0) / 86400000);
+  const mmdd = `${+md.slice(4,6)}/${+md.slice(6,8)}`;
+  if (diff < 0)  return { t:`종료 ${mmdd}`, c:'db-done'  };
+  if (diff === 0) return { t:`오늘 ${mmdd}`, c:'db-today' };
+  if (diff === 1) return { t:`내일 ${mmdd}`, c:'db-tmr'   };
+  return { t:`모레 ${mmdd}`, c:'db-day2' };
+}
 function updateCondCards(verdicts, games) {
   ['D','E','F','I','G','H','L','J','K'].forEach(grp => {
-    const verdict = verdicts[grp];
-    const resultEl = document.getElementById(`result-${grp}`);
     const card     = document.getElementById(`cond-${grp}`);
-    const body     = card?.querySelector('.cond-body');
-    const dayBadge = card?.querySelector('.day-badge');
-    if (!resultEl || !card) return;
+    if (!card) return;
+    const resultEl = document.getElementById(`result-${grp}`);
+    const body     = card.querySelector('.cond-body');
+    const dayBadge = card.querySelector('.day-badge');
+    // 라이브 판정 우선, 없으면 하드코딩 결과로 보강
+    const verdict = (verdicts && verdicts[grp]) || (COND_RESULTS[grp] && COND_RESULTS[grp].verdict) || null;
 
-    if (verdict === 'good') {
-      resultEl.textContent = '✅ 유리';
-      resultEl.className = 'cond-result result-good';
-      // 카드 접기: body 숨기고 헤더만 남김
-      if (body) body.style.display = 'none';
+    if (verdict === 'good' || verdict === 'bad') {
+      const bad = verdict === 'bad';
+      if (resultEl) { resultEl.textContent = bad ? '❌ 불리' : '✅ 유리'; resultEl.className = 'cond-result ' + (bad ? 'result-bad' : 'result-good'); }
       if (dayBadge) { dayBadge.textContent = '종료'; dayBadge.className = 'day-badge db-done'; }
-      card.style.borderColor = '#86efac';
-      card.style.opacity = '0.85';
-    } else if (verdict === 'bad') {
-      resultEl.textContent = '❌ 불리';
-      resultEl.className = 'cond-result result-bad';
-      if (body) body.style.display = 'none';
-      if (dayBadge) { dayBadge.textContent = '종료'; dayBadge.className = 'day-badge db-done'; }
-      card.style.borderColor = '#fca5a5';
-      card.style.opacity = '0.75';
+      const txt = COND_RESULTS[grp] && COND_RESULTS[grp].txt;
+      if (body) {
+        if (txt) body.innerHTML = `<div class="rule"><div class="dot" style="background:${bad ? '#ef4444' : '#22c55e'}"></div><div class="rule-txt">${txt}</div></div>`;
+        else body.style.display = '';
+      }
+      card.style.borderColor = bad ? '#fca5a5' : '#86efac';
+      card.style.opacity = '0.92';
     } else {
-      // 미정: 원래대로
-      resultEl.textContent = '?';
-      resultEl.className = 'cond-result result-pending';
+      // 미정: 날짜 뱃지 동적 + 조건 표시
+      const bl = dayBadgeLabel(COND_DATE[grp]);
+      if (dayBadge && bl) { dayBadge.textContent = bl.t; dayBadge.className = 'day-badge ' + bl.c; }
+      if (resultEl) { resultEl.textContent = '?'; resultEl.className = 'cond-result result-pending'; }
       if (body) body.style.display = '';
+      card.style.opacity = '';
     }
   });
 }
