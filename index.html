@@ -396,6 +396,7 @@ const FLAGS = {
   '콩고민주공화국': `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#007FFF"/><line x1="0" y1="600" x2="900" y2="0" stroke="#F7D618" stroke-width="120"/><circle cx="130" cy="120" r="62" fill="#CE1021"/></svg>`,
   '보스니아':    `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#002395"/><polygon points="450,20 820,580 80,580" fill="#FECB00"/><g fill="#fff"><circle cx="474" cy="60" r="26"/><circle cx="521" cy="133" r="26"/><circle cx="568" cy="206" r="26"/><circle cx="615" cy="279" r="26"/><circle cx="662" cy="352" r="26"/><circle cx="709" cy="425" r="26"/><circle cx="756" cy="498" r="26"/><circle cx="430" cy="540" r="26"/></g></svg>`,
   '우루과이':    `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#fff"/><g fill="#0038A8"><rect y="67"  width="900" height="66"/><rect y="200" width="900" height="66"/><rect y="333" width="900" height="66"/><rect y="467" width="900" height="66"/></g><rect width="370" height="333" fill="#fff"/><circle cx="185" cy="166" r="60" fill="#FCD116" stroke="#7B3F00" stroke-width="5"/></svg>`,
+  '가나':        `<svg viewBox="0 0 900 600"><rect width="900" height="200" fill="#CE1126"/><rect y="200" width="900" height="200" fill="#FCD116"/><rect y="400" width="900" height="200" fill="#006B3F"/><polygon points="450,242 464,281 505,282 472,307 484,347 450,323 416,347 428,307 395,282 436,281" fill="#000"/></svg>`,
   'DR콩고':     `<svg viewBox="0 0 900 600"><rect width="900" height="600" fill="#007FFF"/><line x1="0" y1="600" x2="900" y2="0" stroke="#F7D618" stroke-width="120"/><circle cx="130" cy="120" r="62" fill="#CE1021"/></svg>`,
 };
 // 표준 태극기 (정확한 4괘·태극) — 첨부 이미지 기준
@@ -489,20 +490,25 @@ function renderStandingsFromServer(thirds) {
     `축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치`;
 
   // ── 요약 박스 자동 계산 ──────────────────────────────────
-  const koreaRank   = thirds.findIndex(t => t.name === '대한민국') + 1;
-  const pendingAbove = thirds.filter(t => !t.done && t.name !== '대한민국' && aboveKorea(t)).length;
-  const threshold   = 8 - aheadCount; // 미정 조 3위 중 한국을 넘는 팀이 이 수 이상이면 탈락
+  const koreaRank    = thirds.findIndex(t => t.name === '대한민국') + 1;
+  const pendingTeams = thirds.filter(t => !t.done && t.name !== '대한민국');
+  const pendingAbove = pendingTeams.filter(t => aboveKorea(t)).length;
+  const pendNames    = pendingTeams.map(t => `${t.name}(${t.group}조)`).join(' · ');
+  const canSurpass   = (8 - aheadCount) - pendingAbove; // 미정 조에서 추가로 이만큼 더 한국을 넘으면 탈락
   const summaryP = document.querySelector('.summary p');
   if (summaryP && koreaRank > 0) {
-    if (pendingCount === 0) {
+    if (pendingTeams.length === 0) {
       summaryP.innerHTML = (koreaRank <= 8)
         ? `🎉 한국 <b>${koreaRank}위</b> — 32강 진출 확정!`
-        : `한국 <b>${koreaRank}위</b> — 32강 진출 불발`;
+        : `😢 한국 <b>${koreaRank}위</b> — 32강 진출 불발`;
+    } else if (canSurpass <= 1) {
+      summaryP.innerHTML =
+        `한국 현재 <b>${koreaRank}위</b> (32강 막차) · 한국보다 위 <b>${aheadCount + pendingAbove}팀</b><br>` +
+        `남은 <b>${pendNames}</b>가 <b>모두 한국보다 아래</b>로 끝나야 진출 — 한 팀이라도 한국을 넘으면 탈락`;
     } else {
       summaryP.innerHTML =
-        `한국 현재 <b>${koreaRank}위</b> · 한국 위 <b>${aheadCount}팀</b> 확정<br>` +
-        `남은 <b>${pendingCount}개 조</b> 3위 중 한국을 넘는 팀이 <b>${threshold}팀 이상</b>이면 탈락` +
-        ` (지금 <b>${pendingAbove}팀</b>이 위)`;
+        `한국 현재 <b>${koreaRank}위</b> · 한국보다 위 <b>${aheadCount + pendingAbove}팀</b><br>` +
+        `남은 <b>${pendingTeams.length}개 조</b>(${pendNames}) 중 한국을 넘는 팀이 <b>${canSurpass}팀 이상</b>이면 탈락`;
     }
   }
 }
