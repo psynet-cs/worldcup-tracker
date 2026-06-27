@@ -167,7 +167,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 <div class="prob">
   <div class="prob-lbl">32강 진출 확률 (옵타 추정 · 6/27 기준)</div>
   <div class="prob-row">
-    <div class="prob-num">31.5</div>
+    <div class="prob-num">17.8</div>
     <div class="prob-pct">%</div>
   </div>
   <div class="prob-sub">12개 조 3위 중 <b>상위 8팀</b>만 32강 진출<br>축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치</div>
@@ -475,8 +475,8 @@ function renderStandingsFromServer(thirds) {
   // ── 진출확률: 옵타(Opta) 발표 수치 수동 표기 ──────────────
   // 자동 계산이 아님. 옵타 슈퍼컴퓨터 추정치를 사용.
   // 수치가 갱신되면 아래 OPTA_PROB / OPTA_ASOF 두 값만 바꾸면 됨.
-  const OPTA_PROB = 31.5;     // % (옵타 발표값, G조 이란 추월 반영)
-  const OPTA_ASOF = '6/27';   // 기준일
+  const OPTA_PROB = 17.8;     // % (옵타 발표값, L조 가나 추월 반영 17.84%)
+  const OPTA_ASOF = '6/28';   // 기준일
   const probNum = document.querySelector('.prob-num');
   const gauge   = document.getElementById('gaugeFill');
   if (probNum) probNum.textContent = OPTA_PROB.toFixed(1);
