@@ -658,6 +658,12 @@ const COND_RESULTS = {
   G: { verdict:'bad',  txt:'이집트 1-1 이란 무승부 → 이란 승점3·득실0으로 한국 추월 (불리)' },
   H: { verdict:'good', txt:'스페인 1-0 승 + 카보베르데 0-0 무승부 → H조 3위는 우루과이(한국 아래) (유리)' },
 };
+// 카드별 관련 경기 GAME_ID (하드코딩 설명이 없을 때 점수로 자동 결과 생성)
+const COND_GAMES = {
+  D: ['OT20262724868695'], I: ['OT20262724868725'], G: ['OT20262724868713'],
+  H: ['OT20262724868718','OT20262724868719'],
+  L: ['OT20262724868744'], J: ['OT20262724868732'], K: ['OT20262724868738'],
+};
 function dayBadgeLabel(md) {
   if (!md) return null;
   const now = new Date(Date.now() + 9*3600000); // KST
@@ -684,7 +690,16 @@ function updateCondCards(verdicts, games) {
       const bad = verdict === 'bad';
       if (resultEl) { resultEl.textContent = bad ? '❌ 불리' : '✅ 유리'; resultEl.className = 'cond-result ' + (bad ? 'result-bad' : 'result-good'); }
       if (dayBadge) { dayBadge.textContent = '종료'; dayBadge.className = 'day-badge db-done'; }
-      const txt = COND_RESULTS[grp] && COND_RESULTS[grp].txt;
+      let txt = COND_RESULTS[grp] && COND_RESULTS[grp].txt;
+      // 하드코딩 설명이 없으면 경기 점수로 자동 생성 (예: "크로아티아 2-1 가나 → 한국에 불리")
+      if (!txt && games && COND_GAMES[grp]) {
+        const parts = COND_GAMES[grp].map(id => {
+          const g = games.find(x => x.gameId === id);
+          return (g && g.homeScore !== '' && g.homeScore != null)
+            ? `${g.homeTeam} ${g.homeScore}-${g.awayScore} ${g.awayTeam}` : null;
+        }).filter(Boolean);
+        if (parts.length) txt = parts.join(' · ') + (bad ? ' → 한국에 불리' : ' → 한국에 유리');
+      }
       if (body) {
         if (txt) body.innerHTML = `<div class="rule"><div class="dot" style="background:${bad ? '#ef4444' : '#22c55e'}"></div><div class="rule-txt">${txt}</div></div>`;
         else body.style.display = '';
