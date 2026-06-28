@@ -29,6 +29,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
 .prob-sub b{color:#FFD700}
 .gauge{height:10px;background:rgba(255,255,255,.15);border-radius:5px;margin-top:10px;overflow:hidden}
 .gauge-fill{height:100%;border-radius:5px;background:#FFD700;transition:width 1.2s ease}
+.elim{background:linear-gradient(135deg,#1a0000,#5b0a0a);border:2px solid #b91c1c;border-radius:14px;padding:24px 18px;text-align:center;box-shadow:0 6px 26px rgba(150,0,0,.4)}
+.elim-tag{color:#fca5a5;font-size:11px;letter-spacing:.5px;margin-bottom:10px}
+.elim-title{color:#fff;font-size:30px;font-weight:800;letter-spacing:-.5px;text-shadow:0 2px 8px rgba(0,0,0,.5);margin-bottom:14px}
+.elim-msg{color:#ffe3e3;font-size:15px;line-height:1.75;font-weight:600}
+.elim-msg b{color:#ffd700}
 
 /* ── 섹션 ── */
 .sec-hd{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
@@ -163,15 +168,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sa
   </div>
 </div>
 
-<!-- 확률 -->
-<div class="prob">
-  <div class="prob-lbl">32강 진출 확률 (옵타 추정 · 6/27 기준)</div>
-  <div class="prob-row">
-    <div class="prob-num">17.8</div>
-    <div class="prob-pct">%</div>
-  </div>
-  <div class="prob-sub">12개 조 3위 중 <b>상위 8팀</b>만 32강 진출<br>축구 통계업체 <b>Opta</b> 슈퍼컴퓨터 추정치</div>
-  <div class="gauge"><div class="gauge-fill" style="width:0" id="gaugeFill"></div></div>
+<!-- 탈락 확정 배너 -->
+<div class="elim">
+  <div class="elim-tag">2026 북중미 월드컵 · 조별리그 3위</div>
+  <div class="elim-title">❌ 32강 진출 실패 확정</div>
+  <div class="elim-msg">이 탈락은 운이 아닙니다. <b>작품입니다.</b><br>
+    홍명보 감독의 <b>탁월한 전술</b> 덕분에,<br>
+    콩고에게 길을 열어준 <b>대한민국</b></div>
 </div>
 
 <!-- 오늘 실시간 경기 -->
@@ -497,7 +500,10 @@ function renderStandingsFromServer(thirds) {
   const canSurpass   = (8 - aheadCount) - pendingAbove; // 미정 조에서 추가로 이만큼 더 한국을 넘으면 탈락
   const summaryP = document.querySelector('.summary p');
   if (summaryP && koreaRank > 0) {
-    if (pendingTeams.length === 0) {
+    if (aheadCount >= 8) {
+      // 한국 위 확정 8팀 → 산술적으로 8위 밖, 탈락 확정
+      summaryP.innerHTML = `😢 한국 <b>${koreaRank}위</b> — <b>32강 진출 실패 확정</b> (상위 8팀 밖)`;
+    } else if (pendingTeams.length === 0) {
       summaryP.innerHTML = (koreaRank <= 8)
         ? `🎉 한국 <b>${koreaRank}위</b> — 32강 진출 확정!`
         : `😢 한국 <b>${koreaRank}위</b> — 32강 진출 불발`;
@@ -681,6 +687,8 @@ const COND_RESULTS = {
   I: { verdict:'bad',  txt:'세네갈 5-0 이라크 대승 → 세네갈 득실 +2로 한국 추월 (불리)' },
   G: { verdict:'bad',  txt:'이집트 1-1 이란 무승부 → 이란 승점3·득실0으로 한국 추월 (불리)' },
   H: { verdict:'good', txt:'스페인 1-0 승 + 카보베르데 0-0 무승부 → H조 3위는 우루과이(한국 아래) (유리)' },
+  L: { verdict:'bad',  txt:'크로아티아 2-1 가나 → 가나 승점4·L조 3위로 한국 추월 (불리)' },
+  K: { verdict:'bad',  txt:'DR콩고 2-1 우즈베키스탄 승리 → 콩고 승점4로 한국 추월, 32강 진출 실패 확정 (불리)' },
 };
 // 카드별 관련 경기 GAME_ID (하드코딩 설명이 없을 때 점수로 자동 결과 생성)
 const COND_GAMES = {
@@ -707,8 +715,8 @@ function updateCondCards(verdicts, games) {
     const resultEl = document.getElementById(`result-${grp}`);
     const body     = card.querySelector('.cond-body');
     const dayBadge = card.querySelector('.day-badge');
-    // 라이브 판정 우선, 없으면 하드코딩 결과로 보강
-    const verdict = (verdicts && verdicts[grp]) || (COND_RESULTS[grp] && COND_RESULTS[grp].verdict) || null;
+    // 하드코딩 결과(검증된 값) 우선, 없으면 라이브 판정
+    const verdict = (COND_RESULTS[grp] && COND_RESULTS[grp].verdict) || (verdicts && verdicts[grp]) || null;
 
     if (verdict === 'good' || verdict === 'bad') {
       const bad = verdict === 'bad';
@@ -861,10 +869,7 @@ async function loadGames() {
 
 // ── 초기화 ──────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // 게이지는 0에서 시작 → 데이터/대체 렌더 시 실시간 계산값으로 채워짐
-  document.getElementById('gaugeFill').style.width = '0';
-
-  // 경기 로드 (성공/실패 모두 순위표 렌더 → 진출확률 계산됨)
+  // 경기 로드 (성공/실패 모두 순위표 렌더)
   loadGames();
 
   // ── 스마트 폴링 ───────────────────────────────────────
